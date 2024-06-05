@@ -49,22 +49,22 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+    WNDCLASSEXW WndClass;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc = WndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = 0;
-    wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wcex.lpszMenuName = nullptr;
-    wcex.lpszClassName = lpszClass;
-    wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
+    WndClass.cbSize = sizeof(WNDCLASSEX);
+    WndClass.style = CS_HREDRAW | CS_VREDRAW;
+    WndClass.lpfnWndProc = WndProc;
+    WndClass.cbClsExtra = 0;
+    WndClass.cbWndExtra = 0;
+    WndClass.hInstance = hInstance;
+    WndClass.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
+    WndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    WndClass.lpszMenuName = nullptr;
+    WndClass.lpszClassName = lpszClass;
+    WndClass.hIconSm = LoadIcon(WndClass.hInstance, IDI_APPLICATION);
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassExW(&WndClass);
 }
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)

@@ -5,11 +5,13 @@ GameFramework::GameFramework() : currentFrame(0), frameTimeAccumulator(0.0f), pl
 {
     Clear();
     LoadImages();
+    camera = new Camera(800, 600); // 카메라 초기화
 }
 
 GameFramework::~GameFramework()
 {
     CleanupDoubleBuffering();
+    delete camera; // 카메라 삭제
 }
 
 void GameFramework::Reset()
@@ -78,17 +80,21 @@ void GameFramework::Draw(HDC hdc)
     // 백 버퍼를 클리어
     FillRect(m_hdcBackBuffer, &clientRect, (HBRUSH)(COLOR_WINDOW + 1));
 
+    // 카메라 오프셋을 가져옴
+    float offsetX = camera->GetOffsetX();
+    float offsetY = camera->GetOffsetY();
+
     // 배경을 백 버퍼에 그리기
-    mapImage.Draw(m_hdcBackBuffer, 0, 0);
+    mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
     // 주인공의 현재 프레임을 백 버퍼에 그리기
     if (isMoving)
     {
-        runImages[currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(playerX), static_cast<int>(playerY));
+        runImages[currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(playerX - offsetX), static_cast<int>(playerY - offsetY));
     }
     else
     {
-        idleImages[currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(playerX), static_cast<int>(playerY));
+        idleImages[currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(playerX - offsetX), static_cast<int>(playerY - offsetY));
     }
 
     // 백 버퍼의 내용을 화면에 출력
@@ -117,6 +123,9 @@ void GameFramework::Update(const float frameTime)
     if (moveRight) { MovePlayer(playerSpeed, 0); isMoving = true; }
     if (moveUp) { MovePlayer(0, -playerSpeed); isMoving = true; }
     if (moveDown) { MovePlayer(0, playerSpeed); isMoving = true; }
+
+    // 카메라 업데이트
+    camera->Update(playerX, playerY);
 }
 
 void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam)

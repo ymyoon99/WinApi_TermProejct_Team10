@@ -28,21 +28,20 @@ void GameFramework::Create(HWND hWnd)
 void GameFramework::LoadImages()
 {
     // 배경 이미지 로드
-    mapImage.Load(L"game_map.png");
+    mapImage.Load(L"./resources/background/background.png");
 
     // Idle 이미지 로드
-    idleImages[0].Load(L"Idle_0 #8422.png");
-    idleImages[1].Load(L"Idle_1 #8452.png");
-    idleImages[2].Load(L"Idle_2 #8931.png");
-    idleImages[3].Load(L"Idle_3 #8552.png");
-    idleImages[4].Load(L"Idle_4 #8410.png");
-    idleImages[5].Load(L"Idle_5 #8399.png");
+    idleImages[0].Load(L"./resources/player/Idle_0.png");
+    idleImages[1].Load(L"./resources/player/Idle_1.png");
+    idleImages[2].Load(L"./resources/player/Idle_2.png");
+    idleImages[3].Load(L"./resources/player/Idle_3.png");
+    idleImages[4].Load(L"./resources/player/Idle_4.png");
 
     // Run 이미지 로드
-    runImages[0].Load(L"Run_0 #8871.png");
-    runImages[1].Load(L"Run_1 #8887.png");
-    runImages[2].Load(L"Run_2 #8377.png");
-    runImages[3].Load(L"Run_3 #8441.png");
+    runImages[0].Load(L"./resources/player/Run_0.png");
+    runImages[1].Load(L"./resources/player/Run_1.png");
+    runImages[2].Load(L"./resources/player/Run_2.png");
+    runImages[3].Load(L"./resources/player/Run_3.png");
 }
 
 void GameFramework::InitializeDoubleBuffering(HDC hdc)
@@ -107,7 +106,7 @@ void GameFramework::Update(const float frameTime)
         }
         else
         {
-            currentFrame = (currentFrame + 1) % 6; // Idle 애니메이션이 6 프레임이므로
+            currentFrame = (currentFrame + 1) % 5; // Idle 애니메이션이 6 프레임이므로
         }
         frameTimeAccumulator = 0.0f;
     }

@@ -75,5 +75,9 @@ $RECYCLE.BIN/
 *.ipch
 *.iobj
 *.ipdb
+*.db-shm
+*.db-wal
+*.opendb
+.iobj
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,c++

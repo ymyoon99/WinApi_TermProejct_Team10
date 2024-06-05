@@ -2,11 +2,11 @@
 #include "Client.h"
 #include "GameFramework.h"
 
-#define CLIENT_WIDTH		800
-#define CLIENT_HEIGHT		600
+#define CLIENT_WIDTH    800
+#define CLIENT_HEIGHT   600
 
-#define GAME_TIMER			1	
-#define GAME_FRAME_RATE	    16
+#define GAME_TIMER      1    
+#define GAME_FRAME_RATE 16
 
 HINSTANCE hInst;
 LPCTSTR lpszClass = L"Winapi Term Project";
@@ -40,6 +40,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
         }
+        else
+        {
+            // 게임 프레임 업데이트
+            gameframework.Update(0.016f); // 약 60FPS로 가정 (1초 / 60프레임)
+            InvalidateRect(GetActiveWindow(), NULL, FALSE);
+        }
     }
 
     gameframework.Clear();
@@ -49,22 +55,22 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
-    WNDCLASSEXW WndClass;
+    WNDCLASSEXW wcex;
 
-    WndClass.cbSize = sizeof(WNDCLASSEX);
-    WndClass.style = CS_HREDRAW | CS_VREDRAW;
-    WndClass.lpfnWndProc = WndProc;
-    WndClass.cbClsExtra = 0;
-    WndClass.cbWndExtra = 0;
-    WndClass.hInstance = hInstance;
-    WndClass.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
-    WndClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    WndClass.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    WndClass.lpszMenuName = nullptr;
-    WndClass.lpszClassName = lpszClass;
-    WndClass.hIconSm = LoadIcon(WndClass.hInstance, IDI_APPLICATION);
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, IDI_APPLICATION);
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = nullptr;
+    wcex.lpszClassName = lpszClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, IDI_APPLICATION);
 
-    return RegisterClassExW(&WndClass);
+    return RegisterClassExW(&wcex);
 }
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
@@ -104,7 +110,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     case WM_TIMER:
-        gameframework.Update();
+        gameframework.Update(0.016f); // 약 60FPS로 가정 (1초 / 60프레임)
         InvalidateRect(hWnd, NULL, FALSE);
         break;
 

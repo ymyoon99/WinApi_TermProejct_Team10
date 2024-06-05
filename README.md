@@ -1,2 +1,3 @@
-# WinApi_TermProejct_Team10
+# Winapi_TermProject_Team10
  
+Hello Hong

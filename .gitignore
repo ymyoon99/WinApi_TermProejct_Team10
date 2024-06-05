@@ -70,5 +70,7 @@ $RECYCLE.BIN/
 *.recipe
 *.ilk
 *.log
+*.idb
+*.pdb
 
 # End of https://www.toptal.com/developers/gitignore/api/windows,c++

@@ -1,7 +1,6 @@
 #pragma once
 
-class Camera
-{
+class Camera {
 public:
     Camera(float width, float height);
     ~Camera();

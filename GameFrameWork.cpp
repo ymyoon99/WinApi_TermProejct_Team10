@@ -47,23 +47,13 @@ void GameFramework::Draw(HDC hdc) {
     mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
     // 주인공의 현재 프레임을 백 버퍼에 그리기
-    if (player->isMoving) {
-        if (player->runImages[player->currentFrame].IsNull() == FALSE) {
-            player->runImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
-        }
-    }
-    else {
-        if (player->idleImages[player->currentFrame].IsNull() == FALSE) {
-            player->idleImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
-        }
-    }
+    player->Draw(m_hdcBackBuffer, offsetX, offsetY);
 
     // 플레이어의 바운딩 박스 그리기
     player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }
-
 
 void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
     switch (iMessage) {
@@ -73,16 +63,22 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
             return;
         }
         switch (wParam) {
-        case VK_LEFT:
+        case 'A':
+        case 'a':
             player->moveLeft = true;
+            player->SetDirectionLeft(true); // 왼쪽으로 이동 시 방향 설정
             break;
-        case VK_RIGHT:
+        case 'D':
+        case 'd':
             player->moveRight = true;
+            player->SetDirectionLeft(false); // 오른쪽으로 이동 시 방향 설정
             break;
-        case VK_UP:
+        case 'W':
+        case 'w':
             player->moveUp = true;
             break;
-        case VK_DOWN:
+        case 'S':
+        case 's':
             player->moveDown = true;
             break;
         }
@@ -90,16 +86,20 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
 
     case WM_KEYUP:
         switch (wParam) {
-        case VK_LEFT:
+        case 'A':
+        case 'a':
             player->moveLeft = false;
             break;
-        case VK_RIGHT:
+        case 'D':
+        case 'd':
             player->moveRight = false;
             break;
-        case VK_UP:
+        case 'W':
+        case 'w':
             player->moveUp = false;
             break;
-        case VK_DOWN:
+        case 'S':
+        case 's':
             player->moveDown = false;
             break;
         }

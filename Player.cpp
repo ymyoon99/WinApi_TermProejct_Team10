@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(float x, float y, float speed) : x(x), y(y), speed(speed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0) {
+Player::Player(float x, float y, float speed) : x(x), y(y), speed(speed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0), directionLeft(false) {
     LoadImages();
 }
 
@@ -67,6 +67,19 @@ void Player::LoadImages() {
     runImages[1].Load(L"./resources/player/Run_1.png");
     runImages[2].Load(L"./resources/player/Run_2.png");
     runImages[3].Load(L"./resources/player/Run_3.png");
+
+    // Idle 이미지 로드
+    r_idleImages[0].Load(L"./resources/player/rIdle_0.png");
+    r_idleImages[1].Load(L"./resources/player/rIdle_1.png");
+    r_idleImages[2].Load(L"./resources/player/rIdle_2.png");
+    r_idleImages[3].Load(L"./resources/player/rIdle_3.png");
+    r_idleImages[4].Load(L"./resources/player/rIdle_4.png");
+
+    // Run 이미지 로드
+    r_runImages[0].Load(L"./resources/player/rRun_0.png");
+    r_runImages[1].Load(L"./resources/player/rRun_1.png");
+    r_runImages[2].Load(L"./resources/player/rRun_2.png");
+    r_runImages[3].Load(L"./resources/player/rRun_3.png");
 }
 
 void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
@@ -92,4 +105,39 @@ void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
 
     SelectObject(hdc, hOldPen);
     DeleteObject(hPen);
+}
+
+void Player::Draw(HDC hdc, float offsetX, float offsetY) {
+    if (isMoving) {
+        if (directionLeft) {
+            if (r_runImages[currentFrame].IsNull() == FALSE) {
+                r_runImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+            }
+        }
+        else {
+            if (runImages[currentFrame].IsNull() == FALSE) {
+                runImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+            }
+        }
+    }
+    else {
+        if (directionLeft) {
+            if (r_idleImages[currentFrame].IsNull() == FALSE) {
+                r_idleImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+            }
+        }
+        else {
+            if (idleImages[currentFrame].IsNull() == FALSE) {
+                idleImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+            }
+        }
+    }
+}
+
+void Player::SetDirectionLeft(bool isLeft) {
+    directionLeft = isLeft;
+}
+
+bool Player::IsDirectionLeft() const {
+    return directionLeft;
 }

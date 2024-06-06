@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(float x, float y, float speed) : x(x), y(y), speed(speed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false) {
+Player::Player(float x, float y, float speed) : x(x), y(y), speed(speed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0) {
     LoadImages();
 }
 
@@ -29,6 +29,17 @@ void Player::Update(float frameTime) {
 void Player::Move(float dx, float dy) {
     x += dx;
     y += dy;
+
+    // 경계를 벗어나지 않도록 위치 제한
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (x > boundWidth) x = boundWidth;
+    if (y > boundHeight) y = boundHeight;
+}
+
+void Player::SetBounds(float width, float height) {
+    boundWidth = width;
+    boundHeight = height;
 }
 
 float Player::GetX() const {

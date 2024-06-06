@@ -3,9 +3,21 @@
 
 GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m_hOldBitmap(nullptr), player(nullptr), camera(nullptr) {
     Clear();
-    mapImage.Load(L"./resources/background/background.png"); // 배경 이미지 로드
-    camera = new Camera(800, 600); // 카메라 초기화
-    player = new Player(100.0f, 100.0f, 0.2f); // 플레이어 초기화
+
+    // 배경 이미지 로드
+    mapImage.Load(L"./resources/background/background.png");
+
+    // 배경 이미지 크기 가져오기
+    int mapWidth = mapImage.GetWidth();
+    int mapHeight = mapImage.GetHeight();
+
+    // 플레이어를 배경의 정중앙에 배치
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 0.2f);
+    player->SetBounds(mapWidth, mapHeight); // 플레이어 경계 설정
+
+    // 카메라 초기화
+    camera = new Camera(800, 600);
+    camera->SetBounds(mapWidth, mapHeight); // 카메라 경계 설정
 }
 
 GameFramework::~GameFramework() {

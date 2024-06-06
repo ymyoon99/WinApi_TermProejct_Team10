@@ -1,5 +1,4 @@
 #pragma once
-
 #include <atlimage.h> // CImage 사용을 위한 헤더
 
 class Player {
@@ -13,12 +12,16 @@ public:
     float GetX() const;
     float GetY() const;
 
+    void SetBounds(float width, float height); // 경계를 설정하는 메서드 추가
+
     float x, y;
     float speed;
     int currentFrame;
     float frameTimeAccumulator;
     bool moveLeft, moveRight, moveUp, moveDown;
     bool isMoving;
+
+    float boundWidth, boundHeight; // 경계를 위한 변수
 
     // 플레이어 이미지 로드 메서드들
     void LoadImages();

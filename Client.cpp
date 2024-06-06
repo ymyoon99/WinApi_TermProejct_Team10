@@ -99,6 +99,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
 
+    // 클라이언트 영역에 들어오면 커서를 숨기고, 나가면 보이도록 설정
+    TRACKMOUSEEVENT tme;
+    tme.cbSize = sizeof(tme);
+    tme.dwFlags = TME_LEAVE;
+    tme.hwndTrack = hWnd;
+    TrackMouseEvent(&tme);
+
     return TRUE;
 }
 
@@ -128,6 +135,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
     case WM_KEYUP:
         gameframework.OnKeyBoardProcessing(message, wParam, lParam);
+        break;
+
+    case WM_LBUTTONDOWN:
+    case WM_MOUSEMOVE:
+        gameframework.OnMouseProcessing(message, wParam, lParam);
+        ShowCursor(FALSE); // 클라이언트 영역에서는 커서를 숨김
+        break;
+
+    case WM_MOUSELEAVE:
+        ShowCursor(TRUE); // 클라이언트 영역을 벗어나면 커서를 보임
         break;
 
     case WM_DESTROY:

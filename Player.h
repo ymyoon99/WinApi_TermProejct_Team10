@@ -24,11 +24,6 @@ public:
     void SetDirectionLeft(bool isLeft);
     bool IsDirectionLeft() const;
 
-    // 애니메이션 속도를 설정하는 메서드
-    void SetAnimationSpeed(float speed);
-    float GetAnimationSpeed() const;
-
-
     // private을 일단 public으로 사용
     float x, y;
     float speed;

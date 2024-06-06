@@ -90,12 +90,10 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
         case 'A':
         case 'a':
             player->moveLeft = true;
-            player->SetDirectionLeft(true); // 왼쪽으로 이동 시 방향 설정
             break;
         case 'D':
         case 'd':
             player->moveRight = true;
-            player->SetDirectionLeft(false); // 오른쪽으로 이동 시 방향 설정
             break;
         case 'W':
         case 'w':
@@ -133,14 +131,23 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
 
 void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
     switch (iMessage) {
-    case WM_MOUSEMOVE:
+    case WM_MOUSEMOVE: {
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
-        break;
 
+        // 커서의 위치를 기반으로 플레이어의 방향 결정
+        float playerScreenX = player->GetX() - camera->GetOffsetX();
+        if (cursorPos.x < playerScreenX) {
+            player->SetDirectionLeft(true);
+        }
+        else {
+            player->SetDirectionLeft(false);
+        }
+        break;
+    }
     case WM_LBUTTONDOWN:
         showClickImage = true;
-        clickImageTimer = 0.2f; // 클릭 이미지 표시 시간
+        clickImageTimer = 0.2f; // 클릭 이미지가 깜빡이는 시간
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
         break;

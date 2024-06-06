@@ -1,4 +1,5 @@
 #pragma once
+
 #include <atlimage.h> // CImage 사용을 위한 헤더
 
 class Player {
@@ -13,7 +14,7 @@ public:
     float GetY() const;
 
     // 플레이어의 경계를 설정하는 메서드 추가
-    void SetBounds(float width, float height); 
+    void SetBounds(float width, float height);
     void DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const;
 
     // 플레이어 이미지 로드 메서드들
@@ -24,19 +25,18 @@ public:
     void SetDirectionLeft(bool isLeft);
     bool IsDirectionLeft() const;
 
-    // private을 일단 public으로 사용
     float x, y;
     float speed;
-    float animationSpeed; // 애니메이션 속도 변수 추가
+    float animationSpeed;
     int currentFrame;
     float frameTimeAccumulator;
     bool moveLeft, moveRight, moveUp, moveDown;
     bool isMoving;
-    bool directionLeft; // 방향 플래그 추가
+    bool directionLeft;
 
-    float boundWidth, boundHeight; // 경계를 위한 변수
+    float boundWidth, boundHeight;
 
-    // 플레이어 상태에 따른 이미지 배열
+    // 이미지 로드할 배열 선언
     CImage idleImages[5];
     CImage runImages[4];
     CImage r_idleImages[5];

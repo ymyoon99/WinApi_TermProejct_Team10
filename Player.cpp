@@ -7,7 +7,6 @@ Player::Player(float x, float y, float speed, float animationSpeed) : x(x), y(y)
 Player::~Player() {
 }
 
-
 void Player::Update(float frameTime) {
     frameTimeAccumulator += frameTime;
     if (frameTimeAccumulator >= animationSpeed) {
@@ -109,6 +108,7 @@ void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
 }
 
 void Player::Draw(HDC hdc, float offsetX, float offsetY) {
+    // 플레이어 이동 Draw
     if (isMoving) {
         if (directionLeft) {
             if (r_runImages[currentFrame].IsNull() == FALSE) {

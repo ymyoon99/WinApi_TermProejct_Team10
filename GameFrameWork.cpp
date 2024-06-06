@@ -19,6 +19,8 @@ GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m
     camera = new Camera(800, 600);
     camera->SetBounds(mapWidth, mapHeight); // 카메라 경계 설정
 
+    // 총 객체는 이제 자동으로 초기화됨
+
     // 커서 이미지 로드
     cursorImage.Load(L"./resources/ui/icon_TakeAim.png");
     clickImage.Load(L"./resources/ui/T_CursorSprite.png");
@@ -55,6 +57,7 @@ void GameFramework::Draw(HDC hdc) {
     float offsetX = camera->GetOffsetX();
     float offsetY = camera->GetOffsetY();
 
+    // Map 그리기
     mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
     // 주인공의 현재 프레임을 백 버퍼에 그리기
@@ -62,6 +65,10 @@ void GameFramework::Draw(HDC hdc) {
 
     // 플레이어의 바운딩 박스 그리기
     player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
+
+    // 총 그리기
+    gun.Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY, 
+        cursorPos.x, cursorPos.y, player->IsDirectionLeft());
 
     // 마우스 커서 이미지 그리기
     int cursorWidth = cursorImage.GetWidth();

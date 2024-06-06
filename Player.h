@@ -3,7 +3,7 @@
 
 class Player {
 public:
-    Player(float x, float y, float speed);
+    Player(float x, float y, float speed, float animationSpeed);
     ~Player();
 
     void Update(float frameTime);
@@ -12,7 +12,8 @@ public:
     float GetX() const;
     float GetY() const;
 
-    void SetBounds(float width, float height); // 경계를 설정하는 메서드 추가
+    // 플레이어의 경계를 설정하는 메서드 추가
+    void SetBounds(float width, float height); 
     void DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const;
 
     // 플레이어 이미지 로드 메서드들
@@ -23,8 +24,15 @@ public:
     void SetDirectionLeft(bool isLeft);
     bool IsDirectionLeft() const;
 
+    // 애니메이션 속도를 설정하는 메서드
+    void SetAnimationSpeed(float speed);
+    float GetAnimationSpeed() const;
+
+
+    // private을 일단 public으로 사용
     float x, y;
     float speed;
+    float animationSpeed; // 애니메이션 속도 변수 추가
     int currentFrame;
     float frameTimeAccumulator;
     bool moveLeft, moveRight, moveUp, moveDown;

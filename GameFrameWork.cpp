@@ -12,7 +12,7 @@ GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m
     int mapHeight = mapImage.GetHeight();
 
     // 플레이어를 배경의 정중앙에 배치
-    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 0.2f);
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 0.2f, 4.0f);
     player->SetBounds(mapWidth, mapHeight); // 플레이어 경계 설정
 
     // 카메라 초기화

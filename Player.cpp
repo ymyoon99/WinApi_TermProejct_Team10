@@ -1,15 +1,16 @@
 #include "Player.h"
 
-Player::Player(float x, float y, float speed) : x(x), y(y), speed(speed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0), directionLeft(false) {
+Player::Player(float x, float y, float speed, float animationSpeed) : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0), directionLeft(false) {
     LoadImages();
 }
 
 Player::~Player() {
 }
 
+
 void Player::Update(float frameTime) {
     frameTimeAccumulator += frameTime;
-    if (frameTimeAccumulator >= 0.1f) {
+    if (frameTimeAccumulator >= animationSpeed) {
         if (isMoving) {
             currentFrame = (currentFrame + 1) % 4; // Run 애니메이션이 4 프레임이므로
         }

@@ -77,8 +77,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance;
 
-    HWND hWnd = CreateWindowW(lpszClass, lpszWindowName, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CLIENT_WIDTH, CLIENT_HEIGHT, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(
+        lpszClass,
+        lpszWindowName,
+        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX, // 이 스타일로 윈도우 크기 조절 비활성화
+        CW_USEDEFAULT,
+        0,
+        CLIENT_WIDTH,
+        CLIENT_HEIGHT,
+        nullptr,
+        nullptr,
+        hInstance,
+        nullptr
+    );
 
     if (!hWnd)
     {

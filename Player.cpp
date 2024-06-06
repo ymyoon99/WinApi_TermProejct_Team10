@@ -30,11 +30,15 @@ void Player::Move(float dx, float dy) {
     x += dx;
     y += dy;
 
+    // 플레이어의 크기
+    float playerWidth = 32.0f;
+    float playerHeight = 32.0f;
+
     // 경계를 벗어나지 않도록 위치 제한
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (x > boundWidth) x = boundWidth;
-    if (y > boundHeight) y = boundHeight;
+    if (x > boundWidth - playerWidth) x = boundWidth - playerWidth * 2;
+    if (y > boundHeight - playerHeight) y = boundHeight - playerHeight * 2;
 }
 
 void Player::SetBounds(float width, float height) {
@@ -63,4 +67,29 @@ void Player::LoadImages() {
     runImages[1].Load(L"./resources/player/Run_1.png");
     runImages[2].Load(L"./resources/player/Run_2.png");
     runImages[3].Load(L"./resources/player/Run_3.png");
+}
+
+void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
+    HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
+    HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+
+    // 플레이어의 크기
+    float playerWidth = 32.0f;
+    float playerHeight = 32.0f;
+
+    // Top line
+    MoveToEx(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY), NULL);
+    LineTo(hdc, static_cast<int>(x - offsetX + playerWidth), static_cast<int>(y - offsetY));
+
+    // Right line
+    LineTo(hdc, static_cast<int>(x - offsetX + playerWidth), static_cast<int>(y - offsetY + playerHeight));
+
+    // Bottom line
+    LineTo(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY + playerHeight));
+
+    // Left line
+    LineTo(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+
+    SelectObject(hdc, hOldPen);
+    DeleteObject(hPen);
 }

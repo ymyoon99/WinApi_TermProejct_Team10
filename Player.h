@@ -13,6 +13,7 @@ public:
     float GetY() const;
 
     void SetBounds(float width, float height); // 경계를 설정하는 메서드 추가
+    void DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const;
 
     float x, y;
     float speed;

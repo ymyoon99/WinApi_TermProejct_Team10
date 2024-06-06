@@ -48,14 +48,22 @@ void GameFramework::Draw(HDC hdc) {
 
     // 주인공의 현재 프레임을 백 버퍼에 그리기
     if (player->isMoving) {
-        player->runImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
+        if (player->runImages[player->currentFrame].IsNull() == FALSE) {
+            player->runImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
+        }
     }
     else {
-        player->idleImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
+        if (player->idleImages[player->currentFrame].IsNull() == FALSE) {
+            player->idleImages[player->currentFrame].Draw(m_hdcBackBuffer, static_cast<int>(player->GetX() - offsetX), static_cast<int>(player->GetY() - offsetY));
+        }
     }
+
+    // 플레이어의 바운딩 박스 그리기
+    player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }
+
 
 void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
     switch (iMessage) {

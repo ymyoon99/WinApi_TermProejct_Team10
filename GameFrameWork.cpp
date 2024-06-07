@@ -1,7 +1,20 @@
 #include "stdafx.h"
 #include "GameFramework.h"
 
-GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m_hOldBitmap(nullptr), player(nullptr), camera(nullptr), showClickImage(false), clickImageTimer(0.0f) {
+// GameFramework 인스턴스 전역 변수
+extern GameFramework gameframework;
+
+GameFramework::GameFramework() 
+    : m_hdcBackBuffer(nullptr),
+    m_hBitmap(nullptr), 
+    m_hOldBitmap(nullptr), 
+    player(nullptr), 
+    camera(nullptr), 
+    showClickImage(false), 
+    clickImageTimer(0.0f), 
+    enemySpawnTimer(0.0f),
+    currentGun(&revolver) // 초기 총
+{
     Clear();
 
     // 배경 이미지 로드
@@ -12,35 +25,107 @@ GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m
     int mapHeight = mapImage.GetHeight();
 
     // 플레이어를 배경의 정중앙에 배치
-    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 0.2f, 5.0f); // 마지막 파라미터가, 애니메이션 속도.
-    player->SetBounds(mapWidth, mapHeight); // 플레이어 경계 설정
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 1.0f, 5.0f);
+    player->SetBounds(mapWidth, mapHeight);
 
     // 카메라 초기화
     camera = new Camera(800, 600);
-    camera->SetBounds(mapWidth, mapHeight); // 카메라 경계 설정
-
-    // 총 객체는 이제 자동으로 초기화됨
+    camera->SetBounds(mapWidth, mapHeight);
 
     // 커서 이미지 로드
     cursorImage.Load(L"./resources/ui/icon_TakeAim.png");
     clickImage.Load(L"./resources/ui/T_CursorSprite.png");
+
+    // 적 생성
+    CreateEnemies();
+
+    srand(static_cast<unsigned int>(time(NULL)));
+
+    // 장애물 생성
+    CreateObstacles(10);
 }
 
 GameFramework::~GameFramework() {
     CleanupDoubleBuffering();
+
     delete camera;
-    delete player; // 플레이어 삭제
+    delete player;
+
+    for (Obstacle* obstacle : obstacles) {
+        delete obstacle;
+    }
+    obstacles.clear();
+
+    for (Enemy* enemy : enemies) {
+        delete enemy;
+    }
+    enemies.clear();
 }
 
-void GameFramework::Update(const float frameTime) {
-    player->Update(frameTime); // 플레이어 업데이트
-    camera->Update(player->GetX(), player->GetY()); // 플레이어 위치로 카메라 업데이트
+void GameFramework::SpawnEnemy() {
+    if (enemies.size() >= 100) {
+        return;
+    }
+
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
+
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    const wchar_t* enemyImages[] = {
+        L"./resources/enemy/T_Lamprey_0.png",
+        L"./resources/enemy/T_Lamprey_1.png",
+        L"./resources/enemy/T_Lamprey_2.png",
+        L"./resources/enemy/T_Lamprey_3.png",
+        L"./resources/enemy/T_Lamprey_4.png"
+    };
+    int numFrames = sizeof(enemyImages) / sizeof(enemyImages[0]);
+
+    float enemyAnimationSpeed = 2.0f;
+    float enemySpeed = 5.0f;
+
+    enemies.push_back(new Enemy(spawnX, spawnY, enemySpeed, 10, enemyImages, numFrames, enemyAnimationSpeed));
+}
+
+void GameFramework::CreateEnemies() {
+    for (int i = 0; i < 10; ++i) {
+        SpawnEnemy();
+    }
+}
+
+void GameFramework::Update(float frameTime) {
+    player->Update(frameTime, obstacles);
+    camera->Update(player->GetX(), player->GetY());
+
+    for (Enemy* enemy : enemies) {
+        enemy->Update(frameTime, player->GetX(), player->GetY(), obstacles);
+    }
+
+    enemySpawnTimer += frameTime;
+    if (enemySpawnTimer >= enemySpawnInterval) {
+        SpawnEnemy();
+        enemySpawnTimer = 0.0f;
+    }
 
     if (showClickImage) {
         clickImageTimer -= frameTime;
         if (clickImageTimer <= 0.0f) {
             showClickImage = false;
         }
+    }
+}
+
+void GameFramework::CreateObstacles(int numObstacles) {
+    int mapWidth = mapImage.GetWidth();
+    int mapHeight = mapImage.GetHeight();
+
+    for (int i = 0; i < numObstacles; ++i) {
+        float x = static_cast<float>(rand() % mapWidth);
+        float y = static_cast<float>(rand() % mapHeight);
+        obstacles.push_back(new Obstacle(x, y));
     }
 }
 
@@ -57,20 +142,23 @@ void GameFramework::Draw(HDC hdc) {
     float offsetX = camera->GetOffsetX();
     float offsetY = camera->GetOffsetY();
 
-    // Map 그리기
     mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
-    // 주인공의 현재 프레임을 백 버퍼에 그리기
     player->Draw(m_hdcBackBuffer, offsetX, offsetY);
-
-    // 플레이어의 바운딩 박스 그리기
     player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
 
-    // 총 그리기
-    gun.Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY, 
+    for (Enemy* enemy : enemies) {
+        enemy->Draw(m_hdcBackBuffer, offsetX, offsetY);
+    }
+
+    for (Obstacle* obstacle : obstacles) {
+        obstacle->Draw(m_hdcBackBuffer, offsetX, offsetY);
+    }
+
+    // 현재 총 그리기
+    currentGun->Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY,
         cursorPos.x, cursorPos.y, player->IsDirectionLeft());
 
-    // 마우스 커서 이미지 그리기
     int cursorWidth = cursorImage.GetWidth();
     int cursorHeight = cursorImage.GetHeight();
     int clickWidth = clickImage.GetWidth();
@@ -110,6 +198,18 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
         case 's':
             player->moveDown = true;
             break;
+        case '1':
+            currentGun = &revolver;
+            break;
+        case '2':
+            currentGun = &headshotGun;
+            break;
+        case '3':
+            currentGun = &clusterGun;
+            break;
+        case '4':
+            currentGun = &dualShotgun;
+            break;
         }
         break;
 
@@ -142,7 +242,6 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
 
-        // 커서의 위치를 기반으로 플레이어의 방향 결정
         float playerScreenX = player->GetX() - camera->GetOffsetX();
         if (cursorPos.x < playerScreenX) {
             player->SetDirectionLeft(true);
@@ -154,7 +253,7 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
     }
     case WM_LBUTTONDOWN:
         showClickImage = true;
-        clickImageTimer = 0.2f; // 클릭 이미지가 깜빡이는 시간
+        clickImageTimer = 0.2f;
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
         break;
@@ -180,7 +279,7 @@ void GameFramework::CleanupDoubleBuffering() {
 }
 
 void GameFramework::Clear() {
-    // Clear 메서드 구현
+    // 필요한 자원 해제 로직 추가
 }
 
 void GameFramework::Create(HWND hWnd) {

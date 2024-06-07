@@ -1,5 +1,8 @@
 #include "Player.h"
 
+#define PlayerWidth 20.0f
+#define PlayerHeight 25.0f
+
 Player::Player(float x, float y, float speed, float animationSpeed) : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0), directionLeft(false) {
     LoadImages();
 }
@@ -30,15 +33,11 @@ void Player::Move(float dx, float dy) {
     x += dx;
     y += dy;
 
-    // 플레이어의 크기
-    float playerWidth = 32.0f;
-    float playerHeight = 32.0f;
-
     // 경계를 벗어나지 않도록 위치 제한
     if (x < 0) x = 0;
     if (y < 0) y = 0;
-    if (x > boundWidth - playerWidth) x = boundWidth - playerWidth * 2;
-    if (y > boundHeight - playerHeight) y = boundHeight - playerHeight * 2;
+    if (x > boundWidth - PlayerWidth) x = boundWidth - PlayerWidth * 2;
+    if (y > boundHeight - PlayerHeight) y = boundHeight - PlayerHeight * 2;
 }
 
 void Player::SetBounds(float width, float height) {
@@ -86,19 +85,15 @@ void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
     HPEN hPen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
     HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
 
-    // 플레이어의 크기
-    float playerWidth = 32.0f;
-    float playerHeight = 32.0f;
-
     // Top line
     MoveToEx(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY), NULL);
-    LineTo(hdc, static_cast<int>(x - offsetX + playerWidth), static_cast<int>(y - offsetY));
+    LineTo(hdc, static_cast<int>(x - offsetX + PlayerWidth), static_cast<int>(y - offsetY));
 
     // Right line
-    LineTo(hdc, static_cast<int>(x - offsetX + playerWidth), static_cast<int>(y - offsetY + playerHeight));
+    LineTo(hdc, static_cast<int>(x - offsetX + PlayerWidth), static_cast<int>(y - offsetY + PlayerHeight));
 
     // Bottom line
-    LineTo(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY + playerHeight));
+    LineTo(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY + PlayerHeight));
 
     // Left line
     LineTo(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));

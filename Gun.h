@@ -5,12 +5,12 @@
 class Gun {
 public:
     Gun();
-    ~Gun();
+    virtual ~Gun();
 
-    void LoadImages();
+    virtual void LoadImages() = 0;
     void Draw(HDC hdc, float playerX, float playerY, float cursorX, float cursorY, bool directionLeft);
 
-private:
+protected:
     CImage gunImage;
     CImage r_gunImage;
 
@@ -22,39 +22,23 @@ private:
 class Revolver : public Gun {
 public:
     Revolver();
-    virtual void LoadImages();
-
-private:
-    CImage gunImage;
-    CImage r_gunImage;
+    virtual void LoadImages() override;
 };
 
 class HeadshotGun : public Gun {
 public:
     HeadshotGun();
-    virtual void LoadImages();
-
-private:
-    CImage gunImage;
-    CImage r_gunImage;
+    virtual void LoadImages() override;
 };
 
 class ClusterGun : public Gun {
 public:
     ClusterGun();
-    virtual void LoadImages();
-
-private:
-    CImage gunImage;
-    CImage r_gunImage;
+    virtual void LoadImages() override;
 };
 
 class DualShotgun : public Gun {
 public:
     DualShotgun();
-    virtual void LoadImages();
-
-private:
-    CImage gunImage;
-    CImage r_gunImage;
+    virtual void LoadImages() override;
 };

@@ -27,7 +27,11 @@ bool Bullet::IsOutOfBounds(float width, float height) const {
 }
 
 bool Bullet::CheckCollision(float enemyX, float enemyY, float enemyWidth, float enemyHeight) const {
-    return x < enemyX + enemyWidth && x > enemyX && y < enemyY + enemyHeight && y > enemyY;
+    float enemyCenterX = enemyX + enemyWidth / 2.0f;
+    float enemyCenterY = enemyY + enemyHeight / 2.0f;
+
+    return x > enemyX && x < enemyX + enemyWidth &&
+        y > enemyY && y < enemyY + enemyHeight;
 }
 
 int Bullet::GetDamage() const {

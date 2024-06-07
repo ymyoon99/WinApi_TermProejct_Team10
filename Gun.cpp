@@ -1,16 +1,7 @@
 #include "Gun.h"
 
-Gun::Gun() {
-    LoadImages();
-}
-
-Gun::~Gun() {
-}
-
-void Gun::LoadImages() {
-    gunImage.Load(L"./resources/gun/RevolverStill.png");
-    r_gunImage.Load(L"./resources/gun/rRevolverStill.png");
-}
+Gun::Gun() {}
+Gun::~Gun() {}
 
 void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float cursorY, bool directionLeft) {
     float dx = cursorX - playerX;
@@ -50,4 +41,42 @@ void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float curso
     RestoreDC(hdc, savedDC);
 }
 
+// Revolver class implementation
+Revolver::Revolver() {
+    LoadImages();
+}
 
+void Revolver::LoadImages() {
+    gunImage.Load(L"./resources/gun/RevolverStill.png");
+    r_gunImage.Load(L"./resources/gun/rRevolverStill.png");
+}
+
+// HeadshotGun class implementation
+HeadshotGun::HeadshotGun() {
+    LoadImages();
+}
+
+void HeadshotGun::LoadImages() {
+    gunImage.Load(L"./resources/gun/Headshot_Gun.png");
+    r_gunImage.Load(L"./resources/gun/rHeadshot_Gun.png");
+}
+
+// ClusterGun class implementation
+ClusterGun::ClusterGun() {
+    LoadImages();
+}
+
+void ClusterGun::LoadImages() {
+    gunImage.Load(L"./resources/gun/Cluster_Gun.png");
+    r_gunImage.Load(L"./resources/gun/rCluster_Gun.png");
+}
+
+// DualShotgun class implementation
+DualShotgun::DualShotgun() {
+    LoadImages();
+}
+
+void DualShotgun::LoadImages() {
+    gunImage.Load(L"./resources/gun/DualShotgun.png");
+    r_gunImage.Load(L"./resources/gun/rDualShotgun.png");
+}

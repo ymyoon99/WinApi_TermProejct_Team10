@@ -12,5 +12,6 @@
 #include "Client.h"
 #include "Player.h"
 #include "Camera.h"
+#include "Enemy.h"
 
 using namespace std;

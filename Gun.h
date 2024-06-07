@@ -5,16 +5,40 @@
 class Gun {
 public:
     Gun();
-    ~Gun();
+    virtual ~Gun();
 
-    void LoadImages();
+    virtual void LoadImages() = 0;
     void Draw(HDC hdc, float playerX, float playerY, float cursorX, float cursorY, bool directionLeft);
 
-private:
+protected:
     CImage gunImage;
     CImage r_gunImage;
 
     constexpr double DEG2RAD(double deg) const {
         return deg * (3.14159265358979323846 / 180.0);
     }
+};
+
+class Revolver : public Gun {
+public:
+    Revolver();
+    virtual void LoadImages() override;
+};
+
+class HeadshotGun : public Gun {
+public:
+    HeadshotGun();
+    virtual void LoadImages() override;
+};
+
+class ClusterGun : public Gun {
+public:
+    ClusterGun();
+    virtual void LoadImages() override;
+};
+
+class DualShotgun : public Gun {
+public:
+    DualShotgun();
+    virtual void LoadImages() override;
 };

@@ -100,16 +100,60 @@ void GameFramework::Update(float frameTime) {
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
-    for (Enemy* enemy : enemies) {
+    // 적 업데이트
+    auto enemyIter = enemies.begin();
+    while (enemyIter != enemies.end()) {
+        Enemy* enemy = *enemyIter;
         enemy->Update(frameTime, player->GetX(), player->GetY(), obstacles);
+
+        if (enemy->IsDead()) { // 죽었으면 삭제 되도록.
+            delete enemy;
+            enemyIter = enemies.erase(enemyIter);
+        }
+        else {
+            ++enemyIter;
+        }
     }
 
+    // 총알 업데이트
+    for (Bullet* bullet : bullets) {
+        bullet->Update(frameTime);
+    }
+
+    // 총알 충돌 검사 및 화면 밖 제거
+    auto bulletIter = bullets.begin();
+    while (bulletIter != bullets.end()) {
+        Bullet* bullet = *bulletIter;
+        bool bulletRemoved = false;
+        if (bullet->IsOutOfBounds(mapImage.GetWidth(), mapImage.GetHeight())) {
+            delete bullet;
+            bulletIter = bullets.erase(bulletIter);
+            bulletRemoved = true;
+        }
+        else {
+            for (Enemy* enemy : enemies) {
+                if (bullet->CheckCollision(enemy->GetX(), enemy->GetY(), 20.0f, 25.0f)) {
+                    enemy->TakeDamage(bullet->GetDamage());
+                    delete bullet;
+                    bulletIter = bullets.erase(bulletIter);
+                    bulletRemoved = true;
+                    break;
+                }
+            }
+        }
+        if (!bulletRemoved) {
+            ++bulletIter;
+        }
+    }
+
+    // 적 스폰 타이머
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
         SpawnEnemy();
         enemySpawnTimer = 0.0f;
     }
 
+    // 마우스 클릭 이미지
     if (showClickImage) {
         clickImageTimer -= frameTime;
         if (clickImageTimer <= 0.0f) {
@@ -126,6 +170,26 @@ void GameFramework::CreateObstacles(int numObstacles) {
         float x = static_cast<float>(rand() % mapWidth);
         float y = static_cast<float>(rand() % mapHeight);
         obstacles.push_back(new Obstacle(x, y));
+    }
+}
+
+// FireBullet 함수 구현
+void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
+    if (dynamic_cast<Revolver*>(currentGun)) {
+        bullets.push_back(new RevolverBullet(x, y, targetX, targetY));
+    }
+    else if (dynamic_cast<HeadshotGun*>(currentGun)) {
+        bullets.push_back(new HeadshotGunBullet(x, y, targetX, targetY));
+    }
+    else if (dynamic_cast<ClusterGun*>(currentGun)) {
+        bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY));
+        bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
+    }
+    else if (dynamic_cast<DualShotgun*>(currentGun)) {
+        for (int i = -2; i <= 2; ++i) {
+            float spreadAngle = i * 10.0f * (3.14159265358979323846 / 180.0f);
+            bullets.push_back(new DualShotgunBullet(x, y, targetX, targetY, spreadAngle));
+        }
     }
 }
 
@@ -153,6 +217,10 @@ void GameFramework::Draw(HDC hdc) {
 
     for (Obstacle* obstacle : obstacles) {
         obstacle->Draw(m_hdcBackBuffer, offsetX, offsetY);
+    }
+
+    for (Bullet* bullet : bullets) {
+        bullet->Draw(m_hdcBackBuffer, offsetX, offsetY);
     }
 
     // 현재 총 그리기
@@ -256,6 +324,8 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         clickImageTimer = 0.2f;
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
+        FireBullet(player->GetX(), player->GetY(), 
+            cursorPos.x + camera->GetOffsetX(), cursorPos.y + camera->GetOffsetY());
         break;
     }
 }

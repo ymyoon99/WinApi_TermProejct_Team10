@@ -59,3 +59,22 @@ bool Enemy::CheckCollision(float newX, float newY, const std::vector<Obstacle*>&
 void Enemy::Draw(HDC hdc, float offsetX, float offsetY) {
     enemyImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
 }
+
+float Enemy::GetX() const {
+    return x;
+}
+
+float Enemy::GetY() const {
+    return y;
+}
+
+void Enemy::TakeDamage(int damage) {
+    health -= damage;
+    if (health < 0) {
+        health = 0;
+    }
+}
+
+bool Enemy::IsDead() const {
+    return health <= 0;
+}

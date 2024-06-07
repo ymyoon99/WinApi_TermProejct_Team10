@@ -6,6 +6,7 @@
 #include <memory.h>
 #include <tchar.h>
 #include <atlimage.h> // CImage 사용을 위한 헤더
+#include <vector>
 
 // 필요한 헤더 파일 포함
 #include "GameFramework.h"
@@ -13,5 +14,6 @@
 #include "Player.h"
 #include "Camera.h"
 #include "Enemy.h"
+#include "Obstacle.h"
 
 using namespace std;

@@ -1,12 +1,15 @@
 #pragma once
 #include <atlimage.h>
+#include <vector>
+#include "Obstacle.h"
+#include "Player.h"
 
 class Enemy {
 public:
     Enemy(float x, float y, float speed, int health, const wchar_t* imagePaths[], int numFrames, float animationSpeed = 0.2f);
     ~Enemy();
 
-    void Update(float frameTime, float playerX, float playerY);
+    void Update(float frameTime, float playerX, float playerY, const std::vector<Obstacle*>& obstacles);
     void Draw(HDC hdc, float offsetX, float offsetY);
 
     void TakeDamage(int damage);
@@ -26,6 +29,8 @@ private:
     int currentFrame;
     int numFrames;
     float frameTimeAccumulator;
-    float animationSpeed; // 애니메이션 속도
+    float animationSpeed;
     CImage* enemyImages;
+
+    bool CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const;
 };

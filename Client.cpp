@@ -43,7 +43,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
         else
         {
             // 게임 프레임 업데이트
-            gameframework.Update(0.016f); // 약 60FPS로 가정 (1초 / 60프레임)
+            float frameTime = 0.016f; // 약 60FPS로 가정 (1초 / 60프레임)
+            gameframework.Update(frameTime); // 약 60FPS로 가정 (1초 / 60프레임)
             InvalidateRect(GetActiveWindow(), NULL, FALSE);
         }
     }

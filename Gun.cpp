@@ -34,8 +34,8 @@ void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float curso
     xForm.eM12 = sin(DEG2RAD(angle));
     xForm.eM21 = -sin(DEG2RAD(angle));
     xForm.eM22 = cos(DEG2RAD(angle));
-    xForm.eDx = playerX;
-    xForm.eDy = playerY;
+    xForm.eDx = playerX + 10.0f; // 캐릭터의 Width의 절반
+    xForm.eDy = playerY + 12.5f; // 캐릭터의 Height의 절반
 
     SetWorldTransform(hdc, &xForm);
 

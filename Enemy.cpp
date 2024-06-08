@@ -92,7 +92,7 @@ bool Enemy::IsDead() const {
 
 // BrainMonster
 BrainMonster::BrainMonster(float x, float y, float speed, int health, float eWidth, float eHeight)
-    : Enemy(x, y, speed, health, 1.0f, eWidth, eHeight) {
+    : Enemy(x, y, 20.0f, health, 0.2f, eWidth, eHeight) {
     LoadImages();
 }
 
@@ -106,7 +106,7 @@ void BrainMonster::LoadImages() {
 
 // EyeMonster
 EyeMonster::EyeMonster(float x, float y, float speed, int health, float eWidth, float eHeight)
-    : Enemy(x, y, speed, health, 1.0f, eWidth, eHeight) {
+    : Enemy(x, y, 40.0f, health, 0.2f, eWidth, eHeight) {
     LoadImages();
 }
 
@@ -119,7 +119,7 @@ void EyeMonster::LoadImages() {
 
 // BigBoomer
 BigBoomer::BigBoomer(float x, float y, float speed, int health, float eWidth, float eHeight)
-    : Enemy(x, y, speed, health, 1.0f, eWidth, eHeight) {
+    : Enemy(x, y, 20.0f, health, 0.2f, eWidth, eHeight) {
     LoadImages();
 }
 
@@ -133,7 +133,7 @@ void BigBoomer::LoadImages() {
 
 // Lamprey
 Lamprey::Lamprey(float x, float y, float speed, int health, float eWidth, float eHeight)
-    : Enemy(x, y, speed, health, 1.0f, eWidth, eHeight) {
+    : Enemy(x, y, 30.0f, health, 0.2f, eWidth, eHeight) {
     LoadImages();
 }
 
@@ -148,7 +148,7 @@ void Lamprey::LoadImages() {
 
 // Yog
 Yog::Yog(float x, float y, float speed, int health, float eWidth, float eHeight)
-    : Enemy(x, y, speed, health, 1.0f, eWidth, eHeight) {
+    : Enemy(x, y, 20.0f, health, 0.2f, eWidth, eHeight) {
     LoadImages();
 }
 

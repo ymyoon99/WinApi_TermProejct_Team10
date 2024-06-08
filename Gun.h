@@ -1,16 +1,26 @@
+// Gun.h
 #pragma once
 #include <atlimage.h> // CImage 사용을 위한 헤더
 #include <windows.h>  // For POINT
 
 class Gun {
 public:
-    Gun();
+    Gun(int maxAmmo);
     virtual ~Gun();
 
     virtual void LoadImages() = 0;
     void Draw(HDC hdc, float playerX, float playerY, float cursorX, float cursorY, bool directionLeft);
+    void Reload();
+    bool FireBullet();
+    bool IsReloading() const;
+    void UpdateReload(float frameTime);
 
-protected:
+    int maxAmmo;
+    int currentAmmo;
+    bool reloading;
+    float reloadTime;
+    float reloadTimer;
+
     CImage gunImage;
     CImage r_gunImage;
 

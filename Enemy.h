@@ -5,7 +5,7 @@
 
 class Enemy {
 public:
-    Enemy(float x, float y, float speed, int health, float animationSpeed = 0.2f, float eWidth = 50.0f, float eHeight = 50.0f);
+    Enemy(float x, float y, float speed, int health, float animationSpeed = 5.0f, float eWidth = 50.0f, float eHeight = 50.0f);
     virtual ~Enemy();
 
     void Update(float frameTime, float playerX, float playerY, const std::vector<Obstacle*>& obstacles);

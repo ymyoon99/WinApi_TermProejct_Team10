@@ -1,7 +1,36 @@
 #include "Gun.h"
 
-Gun::Gun() {}
+Gun::Gun(int maxAmmo) : maxAmmo(maxAmmo), currentAmmo(maxAmmo), reloading(false), reloadTime(2.0f), reloadTimer(0.0f) {}
 Gun::~Gun() {}
+
+void Gun::Reload() {
+    reloading = true;
+    reloadTimer = 0.0f;
+}
+
+bool Gun::FireBullet() {
+    if (reloading || currentAmmo <= 0) return false;
+    currentAmmo--;
+    if (currentAmmo == 0) {
+        Reload();
+    }
+    return true;
+}
+
+bool Gun::IsReloading() const {
+    return reloading;
+}
+
+void Gun::UpdateReload(float frameTime) {
+    if (reloading) {
+        reloadTimer += frameTime;
+        if (reloadTimer >= reloadTime) {
+            reloading = false;
+            currentAmmo = maxAmmo;
+        }
+    }
+}
+
 
 void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float cursorY, bool directionLeft) {
     float dx = cursorX - playerX;
@@ -47,7 +76,7 @@ void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float curso
 }
 
 // Revolver class implementation
-Revolver::Revolver() {
+Revolver::Revolver() : Gun(5) {
     LoadImages();
 }
 
@@ -61,7 +90,7 @@ void Revolver::LoadImages() {
 }
 
 // HeadshotGun class implementation
-HeadshotGun::HeadshotGun() {
+HeadshotGun::HeadshotGun() : Gun(7) {
     LoadImages();
 }
 
@@ -75,7 +104,7 @@ void HeadshotGun::LoadImages() {
 }
 
 // ClusterGun class implementation
-ClusterGun::ClusterGun() {
+ClusterGun::ClusterGun() : Gun(10) {
     LoadImages();
 }
 
@@ -89,7 +118,7 @@ void ClusterGun::LoadImages() {
 }
 
 // DualShotgun class implementation
-DualShotgun::DualShotgun() {
+DualShotgun::DualShotgun() : Gun(4) {
     LoadImages();
 }
 

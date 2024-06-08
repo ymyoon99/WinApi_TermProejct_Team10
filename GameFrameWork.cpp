@@ -15,7 +15,8 @@ GameFramework::GameFramework()
     bigBoomerSpawnTimer(0.0f),
     lampreySpawnTimer(0.0f),
     yogSpawnTimer(0.0f),
-    currentGun(&revolver) {
+    currentGun(&revolver),
+    frameTime(0.0f) {
     Clear();
 
     mapImage.Load(L"./resources/background/background.png");
@@ -23,7 +24,7 @@ GameFramework::GameFramework()
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
 
-    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 1.0f, 5.0f);
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 2.0f, 0.2f); // x, y, speed, animationSpeed
     player->SetBounds(mapWidth, mapHeight);
 
     camera = new Camera(800, 600);
@@ -35,6 +36,9 @@ GameFramework::GameFramework()
     CreateEnemies();
     srand(static_cast<unsigned int>(time(NULL)));
     CreateObstacles(10);
+
+    bulletUI.Load(L"./resources/ui/bullet_ui.png");
+    bulletUsedUI.Load(L"./resources/ui/bullet_used_ui.png");
 }
 
 GameFramework::~GameFramework() {
@@ -117,13 +121,49 @@ void GameFramework::SpawnYog() {
 }
 
 void GameFramework::CreateEnemies() {
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < 20; ++i) {
         SpawnBrainMonster();
         SpawnEyeMonster();
     }
 }
 
+void GameFramework::DrawBulletUI(HDC hdc) {
+    int x = 10;
+    int y = 10;
+    for (int i = 0; i < currentGun->maxAmmo; i++) {
+        if (i < currentGun->currentAmmo) {
+            bulletUI.Draw(m_hdcBackBuffer, x + i * 20, y);
+        }
+        else {
+            bulletUsedUI.Draw(m_hdcBackBuffer, x + i * 20, y);
+        }
+    }
+}
+
+void GameFramework::DrawReloadingUI(HDC hdc) {
+    if (currentGun->IsReloading()) {
+        RECT rect;
+        rect.left = static_cast<LONG>(player->GetX() - camera->GetOffsetX() - 15);
+        rect.top = static_cast<LONG>(player->GetY() - camera->GetOffsetY() - 20);
+        rect.right = rect.left + 50;
+        rect.bottom = rect.top + 5;
+
+        // 흰색 배경
+        HBRUSH whiteBrush = (HBRUSH)GetStockObject(WHITE_BRUSH);
+        FillRect(m_hdcBackBuffer, &rect, whiteBrush);
+
+        // 빨간색 진행 바
+        int width = static_cast<int>((currentGun->reloadTimer / currentGun->reloadTime) * 50);
+        rect.right = rect.left + width;
+        HBRUSH redBrush = CreateSolidBrush(RGB(255, 0, 0));
+        FillRect(m_hdcBackBuffer, &rect, redBrush);
+        DeleteObject(redBrush);  // 브러시 삭제
+    }
+}
+
 void GameFramework::Update(float frameTime) {
+    this->frameTime = frameTime;  // 프레임 타임 저장
+
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
@@ -201,6 +241,8 @@ void GameFramework::Update(float frameTime) {
             showClickImage = false;
         }
     }
+
+    currentGun->UpdateReload(frameTime);
 }
 
 void GameFramework::CreateObstacles(int numObstacles) {
@@ -215,28 +257,45 @@ void GameFramework::CreateObstacles(int numObstacles) {
 }
 
 void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
-    if (dynamic_cast<Revolver*>(currentGun)) {
-        bullets.push_back(new RevolverBullet(x, y, targetX, targetY));
-    }
-    else if (dynamic_cast<HeadshotGun*>(currentGun)) {
-        bullets.push_back(new HeadshotGunBullet(x, y, targetX, targetY));
-    }
-    else if (dynamic_cast<ClusterGun*>(currentGun)) {
-        bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY));
-        bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
-    }
-    else if (dynamic_cast<DualShotgun*>(currentGun)) {
-        int numBullets = 5; // 발사할 총알의 개수
-        float spreadAngle = 10.0f * (3.14159265358979323846 / 180.0f); // 스프레드 각도(라디안 단위로 변환)
-        float baseAngle = atan2(targetY - y, targetX - x);
+    if (currentGun->FireBullet()) {
+        if (dynamic_cast<Revolver*>(currentGun)) {
+            bullets.push_back(new RevolverBullet(x, y, targetX, targetY));
+        }
+        else if (dynamic_cast<HeadshotGun*>(currentGun)) {
+            bullets.push_back(new HeadshotGunBullet(x, y, targetX, targetY));
+        }
+        else if (dynamic_cast<ClusterGun*>(currentGun)) {
+            bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY));
+            bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
+        }
+        else if (dynamic_cast<DualShotgun*>(currentGun)) {
+            int numBullets = 5; // 발사할 총알의 개수
+            float spreadAngle = 10.0f * (3.14159265358979323846 / 180.0f); // 스프레드 각도(라디안 단위로 변환)
+            float baseAngle = atan2(targetY - y, targetX - x);
 
-        for (int i = 0; i < numBullets; ++i) {
-            float angle = baseAngle + spreadAngle * (i - numBullets / 2);
-            float newTargetX = x + cos(angle) * 100;
-            float newTargetY = y + sin(angle) * 100;
-            bullets.push_back(new DualShotgunBullet(x, y, newTargetX, newTargetY, 0));
+            for (int i = 0; i < numBullets; ++i) {
+                float angle = baseAngle + spreadAngle * (i - numBullets / 2);
+                float newTargetX = x + cos(angle) * 100;
+                float newTargetY = y + sin(angle) * 100;
+                bullets.push_back(new DualShotgunBullet(x, y, newTargetX, newTargetY, 0));
+            }
         }
     }
+}
+
+void GameFramework::DrawFrameTime(HDC hdc) {
+    RECT rect;
+    rect.left = 350;  // 중앙 상단
+    rect.top = 10;
+    rect.right = rect.left + 100;
+    rect.bottom = rect.top + 20;
+
+    wchar_t frameTimeText[100];
+    swprintf_s(frameTimeText, L"Frame Time: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
+
+    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
+    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
+    DrawText(hdc, frameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 }
 
 void GameFramework::Draw(HDC hdc) {
@@ -282,6 +341,11 @@ void GameFramework::Draw(HDC hdc) {
     else {
         cursorImage.Draw(m_hdcBackBuffer, cursorPos.x - cursorWidth / 2, cursorPos.y - cursorHeight / 2);
     }
+
+    DrawBulletUI(m_hdcBackBuffer);
+    DrawReloadingUI(m_hdcBackBuffer);
+    DrawFrameTime(m_hdcBackBuffer);  // 프레임 타임 그리기
+
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }

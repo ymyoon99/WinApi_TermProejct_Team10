@@ -6,7 +6,7 @@
 
 class Enemy {
 public:
-    Enemy(float x, float y, float speed, int health, const wchar_t* imagePaths[], int numFrames, float animationSpeed = 0.2f);
+    Enemy(float x, float y, float speed, int health, const wchar_t* imagePaths[], int numFrames, float animationSpeed = 0.2f, float eWidth = 50.0f, float eHeight = 50.0f);
     ~Enemy();
 
     void Update(float frameTime, float playerX, float playerY, const std::vector<Obstacle*>& obstacles);
@@ -17,11 +17,14 @@ public:
 
     float GetX() const;
     float GetY() const;
+    float GetWidth() const;
+    float GetHeight() const;
 
     void SetBounds(float width, float height);
 
 private:
     float x, y;
+    float eWidth, eHeight;
     float speed;
     int health;
     float boundWidth, boundHeight;

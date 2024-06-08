@@ -4,8 +4,8 @@
 #define PlayerWidth 20.0f
 #define PlayerHeight 25.0f
 
-Enemy::Enemy(float x, float y, float speed, int health, const wchar_t* imagePaths[], int numFrames, float animationSpeed)
-    : x(x), y(y), speed(speed), health(health), boundWidth(0), boundHeight(0), currentFrame(0), numFrames(numFrames), frameTimeAccumulator(0.0f), animationSpeed(animationSpeed) {
+Enemy::Enemy(float x, float y, float speed, int health, const wchar_t* imagePaths[], int numFrames, float animationSpeed,float eWidth, float eHeight)
+    : x(x), y(y), speed(speed), health(health), boundWidth(0), boundHeight(0), currentFrame(0), numFrames(numFrames), frameTimeAccumulator(0.0f), animationSpeed(animationSpeed),  eWidth(50), eHeight(50) {
     enemyImages = new CImage[numFrames];
     for (int i = 0; i < numFrames; ++i) {
         enemyImages[i].Load(imagePaths[i]);
@@ -47,9 +47,9 @@ bool Enemy::CheckCollision(float newX, float newY, const std::vector<Obstacle*>&
         float oh = obstacle->GetHeight();
 
         if (newX < ox + ow &&
-            newX + PlayerWidth > ox &&
+            newX + eWidth > ox &&
             newY < oy + oh &&
-            newY + PlayerHeight > oy) {
+            newY + eHeight > oy) {
             return true;
         }
     }
@@ -66,6 +66,14 @@ float Enemy::GetX() const {
 
 float Enemy::GetY() const {
     return y;
+}
+
+float Enemy::GetWidth() const {
+    return eWidth;
+}
+
+float Enemy::GetHeight() const {
+    return eHeight;
 }
 
 void Enemy::TakeDamage(int damage) {

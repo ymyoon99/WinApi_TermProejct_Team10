@@ -131,8 +131,9 @@ void GameFramework::Update(float frameTime) {
             bulletRemoved = true;
         }
         else {
+            // ÃÑ¾Ë-Àû Ãæµ¹Ã¼Å©
             for (Enemy* enemy : enemies) {
-                if (bullet->CheckCollision(enemy->GetX(), enemy->GetY(), 20.0f, 25.0f)) {
+                if (bullet->CheckCollision( enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight() )) {
                     enemy->TakeDamage(bullet->GetDamage());
                     delete bullet;
                     bulletIter = bullets.erase(bulletIter);
@@ -162,6 +163,7 @@ void GameFramework::Update(float frameTime) {
     }
 }
 
+// Àå¾Ö¹° ¸Ê »ý¼º
 void GameFramework::CreateObstacles(int numObstacles) {
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
@@ -185,6 +187,7 @@ void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
         bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY));
         bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
     }
+    // ¼¦°Ç ¼ÕºÁ¾ßÇÔ
     else if (dynamic_cast<DualShotgun*>(currentGun)) {
         for (int i = -2; i <= 2; ++i) {
             float spreadAngle = i * 10.0f * (3.14159265358979323846 / 180.0f);

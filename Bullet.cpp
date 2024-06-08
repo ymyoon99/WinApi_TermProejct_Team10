@@ -48,7 +48,7 @@ HeadshotGunBullet::HeadshotGunBullet(float x, float y, float targetX, float targ
 
 // ClusterGunBullet
 ClusterGunBullet::ClusterGunBullet(float x, float y, float targetX, float targetY)
-    : Bullet(x, y, targetX, targetY, 50, 400.0f) {}
+    : Bullet(x, y, targetX, targetY, 75, 400.0f) {}
 
 // DualShotgunBullet
 DualShotgunBullet::DualShotgunBullet(float x, float y, float targetX, float targetY, float spreadAngle)

@@ -2,24 +2,57 @@
 #include <cmath>
 
 Bullet::Bullet(float x, float y, float targetX, float targetY, int damage, float speed)
-    : x(x), y(y), speed(speed), damage(damage) {
+    : x(x), y(y), speed(speed), damage(damage), isHit(false), hitEffectDuration(0.25f), hitEffectTime(0.0f) {
     float dx = targetX - x;
     float dy = targetY - y;
     float distance = sqrt(dx * dx + dy * dy);
     directionX = dx / distance;
     directionY = dy / distance;
     bulletImage.Load(L"./resources/gun/SmallCircle.png");
+
+    // Load hit effect images
+    hitEffectImages.resize(2);
+    hitEffectImages[0].Load(L"./resources/effect/HitImpactFX_0.png");
+    hitEffectImages[1].Load(L"./resources/effect/HitImpactFX_1.png");
 }
 
-Bullet::~Bullet() {}
+Bullet::~Bullet() {
+    for (auto& image : hitEffectImages) {
+        image.Destroy();
+    }
+}
 
 void Bullet::Update(float frameTime) {
-    x += directionX * speed * frameTime;
-    y += directionY * speed * frameTime;
+    if (isHit) {
+        UpdateHitEffect(frameTime);
+    }
+    else {
+        x += directionX * speed * frameTime;
+        y += directionY * speed * frameTime;
+    }
+}
+
+void Bullet::UpdateHitEffect(float frameTime) {
+    hitEffectTime += frameTime;
 }
 
 void Bullet::Draw(HDC hdc, float offsetX, float offsetY) {
-    bulletImage.Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+    if (isHit) {
+        DrawHitEffect(hdc, offsetX, offsetY);
+    }
+    else {
+        bulletImage.Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+    }
+}
+
+void Bullet::DrawHitEffect(HDC hdc, float offsetX, float offsetY) {
+    int frame = static_cast<int>((hitEffectTime / hitEffectDuration) * hitEffectImages.size());
+    if (frame >= hitEffectImages.size()) {
+        frame = hitEffectImages.size() - 1; // 마지막 프레임을 유지
+    }
+    if (frame >= 0 && frame < hitEffectImages.size()) {
+        hitEffectImages[frame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+    }
 }
 
 bool Bullet::IsOutOfBounds(float width, float height) const {
@@ -27,15 +60,16 @@ bool Bullet::IsOutOfBounds(float width, float height) const {
 }
 
 bool Bullet::CheckCollision(float enemyX, float enemyY, float enemyWidth, float enemyHeight) const {
-    float enemyCenterX = enemyX + enemyWidth / 2.0f;
-    float enemyCenterY = enemyY + enemyHeight / 2.0f;
-
     return x > enemyX && x < enemyX + enemyWidth &&
         y > enemyY && y < enemyY + enemyHeight;
 }
 
 int Bullet::GetDamage() const {
     return damage;
+}
+
+bool Bullet::isEffectFinished() const {
+    return hitEffectTime >= hitEffectDuration;
 }
 
 // RevolverBullet

@@ -5,8 +5,16 @@
 #define EnemyHeight 50.0f
 
 Enemy::Enemy(float x, float y, float speed, int health, float animationSpeed, float eWidth, float eHeight)
-    : x(x), y(y), speed(speed), health(health), boundWidth(0), boundHeight(0), currentFrame(0), frameTimeAccumulator(0.0f), animationSpeed(animationSpeed), eWidth(eWidth), eHeight(eHeight) {
+    : x(x), y(y), speed(speed), health(health), boundWidth(0), boundHeight(0), currentFrame(0), frameTimeAccumulator(0.0f), animationSpeed(animationSpeed), eWidth(eWidth), eHeight(eHeight),
+    isDying(false), deathEffectDuration(0.5f), deathEffectStart(0.0f) {
     LoadImages();
+
+    // Load death effect images
+    deathEffectImages.resize(4);
+    deathEffectImages[0].Load(L"./resources/effect/DeathFX_0.png");
+    deathEffectImages[1].Load(L"./resources/effect/DeathFX_1.png");
+    deathEffectImages[2].Load(L"./resources/effect/DeathFX_2.png");
+    deathEffectImages[3].Load(L"./resources/effect/DeathFX_3.png");
 }
 
 Enemy::~Enemy() {
@@ -18,6 +26,11 @@ void Enemy::LoadImages() {
 
 
 void Enemy::Update(float frameTime, float playerX, float playerY, const std::vector<Obstacle*>& obstacles) {
+    if (isDying) {
+        UpdateDeathEffect(frameTime);
+        return;
+    }
+
     float dx = playerX - x;
     float dy = playerY - y;
     float distance = sqrt(dx * dx + dy * dy);
@@ -40,6 +53,14 @@ void Enemy::Update(float frameTime, float playerX, float playerY, const std::vec
     }
 }
 
+void Enemy::UpdateDeathEffect(float frameTime) {
+    deathEffectStart += frameTime;
+    if (deathEffectStart >= deathEffectDuration) {
+        isDying = false;
+        deathEffectStart = 0.0f;
+    }
+}
+
 bool Enemy::CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const {
     for (const auto& obstacle : obstacles) {
         float ox = obstacle->GetX();
@@ -58,9 +79,34 @@ bool Enemy::CheckCollision(float newX, float newY, const std::vector<Obstacle*>&
 }
 
 void Enemy::Draw(HDC hdc, float offsetX, float offsetY) {
+    if (isDying) {
+        DrawDeathEffect(hdc, offsetX, offsetY);
+        return;
+    }
+
     if (!idleImages[currentFrame].IsNull()) {
         idleImages[currentFrame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
     }
+}
+
+void Enemy::DrawDeathEffect(HDC hdc, float offsetX, float offsetY) {
+    int frame = static_cast<int>((deathEffectStart / deathEffectDuration) * deathEffectImages.size());
+    if (frame >= 0 && frame < deathEffectImages.size()) {
+        deathEffectImages[frame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+    }
+}
+
+void Enemy::TakeDamage(int damage) {
+    health -= damage;
+    if (health <= 0 && !isDying) {
+        isDying = true;
+        health = 0;
+        deathEffectStart = 0.0f;
+    }
+}
+
+bool Enemy::IsDead() const {
+    return health <= 0 && !isDying;
 }
 
 float Enemy::GetX() const {
@@ -77,17 +123,6 @@ float Enemy::GetWidth() const {
 
 float Enemy::GetHeight() const {
     return eHeight;
-}
-
-void Enemy::TakeDamage(int damage) {
-    health -= damage;
-    if (health < 0) {
-        health = 0;
-    }
-}
-
-bool Enemy::IsDead() const {
-    return health <= 0;
 }
 
 // BrainMonster

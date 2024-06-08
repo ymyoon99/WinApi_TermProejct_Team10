@@ -5,7 +5,7 @@
 class Bullet {
 public:
     Bullet(float x, float y, float targetX, float targetY, int damage, float speed);
-    ~Bullet();
+    virtual ~Bullet();
 
     void Update(float frameTime);
     void Draw(HDC hdc, float offsetX, float offsetY);
@@ -13,12 +13,22 @@ public:
     bool CheckCollision(float enemyX, float enemyY, float enemyWidth, float enemyHeight) const;
     int GetDamage() const;
 
+    bool isHit;
+    bool isEffectFinished() const;
+
 private:
+    void UpdateHitEffect(float frameTime);
+    void DrawHitEffect(HDC hdc, float offsetX, float offsetY);
+
     float x, y;
     float speed;
     float directionX, directionY;
     int damage;
     CImage bulletImage;
+
+    float hitEffectDuration;
+    float hitEffectTime;
+    std::vector<CImage> hitEffectImages;
 };
 
 class RevolverBullet : public Bullet {

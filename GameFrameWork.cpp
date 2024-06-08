@@ -195,7 +195,7 @@ void GameFramework::DrawReloadingUI(HDC hdc) {
 
 void GameFramework::Update(float frameTime) {
     this->frameTime = frameTime;  // 프레임 타임 저장
-    
+
     static float timeAccumulator = 0.0f;
     timeAccumulator += frameTime;
     if (timeAccumulator >= 1.0f) {
@@ -220,35 +220,38 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
-    for (Bullet* bullet : bullets) {
-        bullet->Update(frameTime);
-    }
-
     auto bulletIter = bullets.begin();
     while (bulletIter != bullets.end()) {
         Bullet* bullet = *bulletIter;
+        bullet->Update(frameTime);
+
         bool bulletRemoved = false;
         if (bullet->IsOutOfBounds(mapImage.GetWidth(), mapImage.GetHeight())) {
-            delete bullet;
-            bulletIter = bullets.erase(bulletIter);
             bulletRemoved = true;
+        }
+        else if (bullet->isHit) {
+            if (bullet->isEffectFinished()) {
+                bulletRemoved = true;
+            }
         }
         else {
             for (Enemy* enemy : enemies) {
                 if (bullet->CheckCollision(enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
                     enemy->TakeDamage(bullet->GetDamage());
-                    delete bullet;
-                    bulletIter = bullets.erase(bulletIter);
-                    bulletRemoved = true;
+                    bullet->isHit = true; // Set bullet hit
                     break;
                 }
             }
         }
-        if (!bulletRemoved) {
+
+        if (bulletRemoved) {
+            delete bullet;
+            bulletIter = bullets.erase(bulletIter);
+        }
+        else {
             ++bulletIter;
         }
     }
-
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
         for (int i = 0; i < 20; i++) {

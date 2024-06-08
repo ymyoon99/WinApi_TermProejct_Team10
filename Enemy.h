@@ -23,6 +23,10 @@ public:
 
 protected:
     virtual void LoadImages(); // override를 허용하기 위한 virtual
+
+    void UpdateDeathEffect(float frameTime);
+    void DrawDeathEffect(HDC hdc, float offsetX, float offsetY);
+
     float x, y;
     float eWidth, eHeight;
     float speed;
@@ -36,6 +40,11 @@ protected:
     std::vector<CImage> idleImages;
 
     bool CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const;
+
+    bool isDying;
+    float deathEffectDuration;
+    float deathEffectStart;
+    std::vector<CImage> deathEffectImages;
 };
 
 // BrainMonster

@@ -1,10 +1,31 @@
 #include "stdafx.h"
 #include "GameFramework.h"
+<<<<<<< Updated upstream
 
 // GameFramework 인스턴스 전역 변수
 extern GameFramework gameframework;
 
 GameFramework::GameFramework() : m_hdcBackBuffer(nullptr), m_hBitmap(nullptr), m_hOldBitmap(nullptr), player(nullptr), camera(nullptr), showClickImage(false), clickImageTimer(0.0f), enemySpawnTimer(0.0f) {
+=======
+#include "string"
+extern GameFramework gameframework;
+
+GameFramework::GameFramework()
+    : m_hdcBackBuffer(nullptr),
+    m_hBitmap(nullptr),
+    m_hOldBitmap(nullptr),
+    player(nullptr),
+    camera(nullptr),
+    showClickImage(false),
+    clickImageTimer(0.0f),
+    enemySpawnTimer(0.0f),
+    bigBoomerSpawnTimer(0.0f),
+    lampreySpawnTimer(0.0f),
+    yogSpawnTimer(0.0f),
+    currentGun(&revolver),
+    gameTime(0.0f),
+    bossSpawned(false) {
+>>>>>>> Stashed changes
     Clear();
 
     // 배경 이미지 로드
@@ -77,6 +98,31 @@ void GameFramework::SpawnEnemy() {
     enemies.push_back(new Enemy(spawnX, spawnY, enemySpeed, 10, enemyImages, numFrames, enemyAnimationSpeed));
 }
 
+
+void GameFramework::SpawnBossYog() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
+
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    enemies.push_back(new BossYog(spawnX, spawnY, 5.0f));
+}
+
+void GameFramework::SpawnBossYogNearPlayer() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 500.0f; // 주인공 근처에 소환
+
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    enemies.push_back(new BossYog(spawnX, spawnY, 5.0f, 1000, 128.0f, 108.0f));
+}
+
 void GameFramework::CreateEnemies() {
     for (int i = 0; i < 10; ++i) {
         SpawnEnemy();
@@ -84,6 +130,13 @@ void GameFramework::CreateEnemies() {
 }
 
 void GameFramework::Update(float frameTime) {
+    gameTime += frameTime;
+
+    if (!bossSpawned && gameTime >= 180.0f) { // 3분 = 180초
+        SpawnBossYog();
+        bossSpawned = true;
+    }
+
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
@@ -158,6 +211,10 @@ void GameFramework::Draw(HDC hdc) {
     }
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
+
+    // 게임 시간 표시
+    std::wstring timeText = L"Time: " + std::to_wstring(static_cast<int>(gameTime));
+    TextOut(hdc, 700, 10, timeText.c_str(), timeText.length());
 }
 
 void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
@@ -184,6 +241,24 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
         case 's':
             player->moveDown = true;
             break;
+<<<<<<< Updated upstream
+=======
+        case '1':
+            currentGun = &revolver;
+            break;
+        case '2':
+            currentGun = &headshotGun;
+            break;
+        case '3':
+            currentGun = &clusterGun;
+            break;
+        case '4':
+            currentGun = &dualShotgun;
+            break;
+        case VK_F9:
+            SpawnBossYogNearPlayer();
+            break;
+>>>>>>> Stashed changes
         }
         break;
 

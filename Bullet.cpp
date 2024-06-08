@@ -40,19 +40,19 @@ int Bullet::GetDamage() const {
 
 // RevolverBullet
 RevolverBullet::RevolverBullet(float x, float y, float targetX, float targetY)
-    : Bullet(x, y, targetX, targetY, 50, 500.0f) {}
+    : Bullet(x, y, targetX, targetY, 50, 1500.0f) {}
 
 // HeadshotGunBullet
 HeadshotGunBullet::HeadshotGunBullet(float x, float y, float targetX, float targetY)
-    : Bullet(x, y, targetX, targetY, 100, 600.0f) {}
+    : Bullet(x, y, targetX, targetY, 100, 1500.0f) {}
 
 // ClusterGunBullet
 ClusterGunBullet::ClusterGunBullet(float x, float y, float targetX, float targetY)
-    : Bullet(x, y, targetX, targetY, 75, 400.0f) {}
+    : Bullet(x, y, targetX, targetY, 75, 1500.0f) {}
 
 // DualShotgunBullet
 DualShotgunBullet::DualShotgunBullet(float x, float y, float targetX, float targetY, float spreadAngle)
-    : Bullet(x, y, targetX, targetY, 100, 300.0f) {
+    : Bullet(x, y, targetX, targetY, 100, 1500.0f) {
     // targetX와 targetY에 대한 방향 벡터를 계산
     float dx = targetX - x;
     float dy = targetY - y;

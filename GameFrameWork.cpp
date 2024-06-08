@@ -42,8 +42,38 @@ GameFramework::GameFramework()
     bulletUsedUI.Load(L"./resources/ui/bullet_used_ui.png");
 }
 
+
+HFONT hFont = nullptr;
+
+void InitializeFont() {
+
+    AddFontResourceEx(L"./resource/font/ChevyRay - Lantern.ttf", FR_PRIVATE, nullptr);
+
+    hFont = CreateFont(
+        -24,                      // Height of the font
+        0,                        // Width of the font
+        0,                        // Escapement angle
+        0,                        // Orientation angle
+        FW_NORMAL,                // Font weight
+        FALSE,                    // Italic attribute
+        FALSE,                    // Underline attribute
+        FALSE,                    // Strikeout attribute
+        ANSI_CHARSET,             // Character set identifier
+        OUT_TT_PRECIS,            // Output precision
+        CLIP_DEFAULT_PRECIS,      // Clipping precision
+        ANTIALIASED_QUALITY,      // Output quality
+        DEFAULT_PITCH | FF_DONTCARE,  // Pitch and family
+        L"ChevyRay - Lantern"     // Font name
+    );
+}
+
 GameFramework::~GameFramework() {
     CleanupDoubleBuffering();
+
+    if (hFont) { // 폰트 Release
+        DeleteObject(hFont);
+        hFont = nullptr;
+    }
 
     delete camera;
     delete player;
@@ -298,11 +328,19 @@ void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
 }
 
 void GameFramework::DrawGameTime(HDC hdc) {
+    // Initialize the font if it hasn't been initialized
+    if (!hFont) {
+        InitializeFont();
+    }
+
+    // Store the original font
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
     RECT rect;
-    rect.left = 350;  // 중앙 상단
-    rect.top = 10;
-    rect.right = rect.left + 100;
-    rect.bottom = rect.top + 20;
+    rect.left = 300;  // 중앙 상단
+    rect.top = 5;
+    rect.right = rect.left + 200;
+    rect.bottom = rect.top + 40;
 
     int minutes = gameTimeSeconds / 60;
     int seconds = gameTimeSeconds % 60;
@@ -313,22 +351,24 @@ void GameFramework::DrawGameTime(HDC hdc) {
     SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
     SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
     DrawText(hdc, gameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(hdc, hOldFont);
 }
 
-void GameFramework::DrawFrameTime(HDC hdc) {
-    RECT rect;
-    rect.left = 350;  // 중앙 상단
-    rect.top = 40;
-    rect.right = rect.left + 100;
-    rect.bottom = rect.top + 20;
-
-    wchar_t frameTimeText[100];
-    swprintf_s(frameTimeText, L"FrameTime: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
-
-    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
-    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
-    DrawText(hdc, frameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-}
+//void GameFramework::DrawFrameTime(HDC hdc) {
+//    RECT rect;
+//    rect.left = 350;  // 중앙 상단
+//    rect.top = 40;
+//    rect.right = rect.left + 100;
+//    rect.bottom = rect.top + 20;
+//
+//    wchar_t frameTimeText[100];
+//    swprintf_s(frameTimeText, L"FrameTime: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
+//
+//    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
+//    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
+//    DrawText(hdc, frameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+//}
 
 void GameFramework::Draw(HDC hdc) {
     if (!m_hdcBackBuffer) {

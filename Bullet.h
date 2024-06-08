@@ -1,5 +1,5 @@
 #pragma once
-#include <atlimage.h> // CImage 사용을 위한 헤더
+#include <atlimage.h> 
 #include <vector>
 
 class Bullet {

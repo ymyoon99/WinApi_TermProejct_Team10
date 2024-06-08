@@ -1,47 +1,39 @@
 #include "stdafx.h"
 #include "GameFramework.h"
 
-// GameFramework 인스턴스 전역 변수
 extern GameFramework gameframework;
 
-GameFramework::GameFramework() 
+GameFramework::GameFramework()
     : m_hdcBackBuffer(nullptr),
-    m_hBitmap(nullptr), 
-    m_hOldBitmap(nullptr), 
-    player(nullptr), 
-    camera(nullptr), 
-    showClickImage(false), 
-    clickImageTimer(0.0f), 
+    m_hBitmap(nullptr),
+    m_hOldBitmap(nullptr),
+    player(nullptr),
+    camera(nullptr),
+    showClickImage(false),
+    clickImageTimer(0.0f),
     enemySpawnTimer(0.0f),
-    currentGun(&revolver) // 초기 총
-{
+    bigBoomerSpawnTimer(0.0f),
+    lampreySpawnTimer(0.0f),
+    yogSpawnTimer(0.0f),
+    currentGun(&revolver) {
     Clear();
 
-    // 배경 이미지 로드
     mapImage.Load(L"./resources/background/background.png");
 
-    // 배경 이미지 크기 가져오기
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
 
-    // 플레이어를 배경의 정중앙에 배치
     player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 1.0f, 5.0f);
     player->SetBounds(mapWidth, mapHeight);
 
-    // 카메라 초기화
     camera = new Camera(800, 600);
     camera->SetBounds(mapWidth, mapHeight);
 
-    // 커서 이미지 로드
     cursorImage.Load(L"./resources/ui/icon_TakeAim.png");
     clickImage.Load(L"./resources/ui/T_CursorSprite.png");
 
-    // 적 생성
     CreateEnemies();
-
     srand(static_cast<unsigned int>(time(NULL)));
-
-    // 장애물 생성
     CreateObstacles(10);
 }
 
@@ -62,11 +54,7 @@ GameFramework::~GameFramework() {
     enemies.clear();
 }
 
-void GameFramework::SpawnEnemy() {
-    if (enemies.size() >= 100) {
-        return;
-    }
-
+void GameFramework::SpawnBrainMonster() {
     float playerX = player->GetX();
     float playerY = player->GetY();
     float spawnRadius = 600.0f;
@@ -75,24 +63,63 @@ void GameFramework::SpawnEnemy() {
     float spawnX = playerX + spawnRadius * cos(angle);
     float spawnY = playerY + spawnRadius * sin(angle);
 
-    const wchar_t* enemyImages[] = {
-        L"./resources/enemy/T_Lamprey_0.png",
-        L"./resources/enemy/T_Lamprey_1.png",
-        L"./resources/enemy/T_Lamprey_2.png",
-        L"./resources/enemy/T_Lamprey_3.png",
-        L"./resources/enemy/T_Lamprey_4.png"
-    };
-    int numFrames = sizeof(enemyImages) / sizeof(enemyImages[0]);
+    enemies.push_back(new BrainMonster(spawnX, spawnY, 5.0f));
+}
 
-    float enemyAnimationSpeed = 2.0f;
-    float enemySpeed = 5.0f;
+void GameFramework::SpawnEyeMonster() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
 
-    enemies.push_back(new Enemy(spawnX, spawnY, enemySpeed, 10, enemyImages, numFrames, enemyAnimationSpeed));
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    enemies.push_back(new EyeMonster(spawnX, spawnY, 5.0f));
+}
+
+void GameFramework::SpawnBigBoomer() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
+
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    enemies.push_back(new BigBoomer(spawnX, spawnY, 5.0f));
+}
+
+void GameFramework::SpawnLamprey() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
+
+    for (int i = 0; i < 2; ++i) {
+        float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+        float spawnX = playerX + spawnRadius * cos(angle);
+        float spawnY = playerY + spawnRadius * sin(angle);
+
+        enemies.push_back(new Lamprey(spawnX, spawnY, 5.0f));
+    }
+}
+
+void GameFramework::SpawnYog() {
+    float playerX = player->GetX();
+    float playerY = player->GetY();
+    float spawnRadius = 600.0f;
+
+    float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
+    float spawnX = playerX + spawnRadius * cos(angle);
+    float spawnY = playerY + spawnRadius * sin(angle);
+
+    enemies.push_back(new Yog(spawnX, spawnY, 5.0f));
 }
 
 void GameFramework::CreateEnemies() {
-    for (int i = 0; i < 10; ++i) {
-        SpawnEnemy();
+    for (int i = 0; i < 5; ++i) {
+        SpawnBrainMonster();
+        SpawnEyeMonster();
     }
 }
 
@@ -100,13 +127,12 @@ void GameFramework::Update(float frameTime) {
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
-    // 적 업데이트
     auto enemyIter = enemies.begin();
     while (enemyIter != enemies.end()) {
         Enemy* enemy = *enemyIter;
         enemy->Update(frameTime, player->GetX(), player->GetY(), obstacles);
 
-        if (enemy->IsDead()) { // 죽었으면 삭제 되도록.
+        if (enemy->IsDead()) {
             delete enemy;
             enemyIter = enemies.erase(enemyIter);
         }
@@ -115,12 +141,10 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
-    // 총알 업데이트
     for (Bullet* bullet : bullets) {
         bullet->Update(frameTime);
     }
 
-    // 총알 충돌 검사 및 화면 밖 제거
     auto bulletIter = bullets.begin();
     while (bulletIter != bullets.end()) {
         Bullet* bullet = *bulletIter;
@@ -131,9 +155,8 @@ void GameFramework::Update(float frameTime) {
             bulletRemoved = true;
         }
         else {
-            // 총알-적 충돌체크
             for (Enemy* enemy : enemies) {
-                if (bullet->CheckCollision( enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight() )) {
+                if (bullet->CheckCollision(enemy->GetX(), enemy->GetY(), enemy->GetWidth(), enemy->GetHeight())) {
                     enemy->TakeDamage(bullet->GetDamage());
                     delete bullet;
                     bulletIter = bullets.erase(bulletIter);
@@ -147,14 +170,31 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
-    // 적 스폰 타이머
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
-        SpawnEnemy();
+        SpawnBrainMonster();
+        SpawnEyeMonster();
         enemySpawnTimer = 0.0f;
     }
 
-    // 마우스 클릭 이미지
+    bigBoomerSpawnTimer += frameTime;
+    if (bigBoomerSpawnTimer >= bigBoomerSpawnInterval) {
+        SpawnBigBoomer();
+        bigBoomerSpawnTimer = 0.0f;
+    }
+
+    lampreySpawnTimer += frameTime;
+    if (lampreySpawnTimer >= lampreySpawnInterval) {
+        SpawnLamprey();
+        lampreySpawnTimer = 0.0f;
+    }
+
+    yogSpawnTimer += frameTime;
+    if (yogSpawnTimer >= yogSpawnInterval) {
+        SpawnYog();
+        yogSpawnTimer = 0.0f;
+    }
+
     if (showClickImage) {
         clickImageTimer -= frameTime;
         if (clickImageTimer <= 0.0f) {
@@ -163,7 +203,6 @@ void GameFramework::Update(float frameTime) {
     }
 }
 
-// 장애물 맵 생성
 void GameFramework::CreateObstacles(int numObstacles) {
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
@@ -175,7 +214,6 @@ void GameFramework::CreateObstacles(int numObstacles) {
     }
 }
 
-// FireBullet 함수 구현
 void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
     if (dynamic_cast<Revolver*>(currentGun)) {
         bullets.push_back(new RevolverBullet(x, y, targetX, targetY));
@@ -187,7 +225,6 @@ void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
         bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY));
         bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
     }
-    // 샷건 손봐야함
     else if (dynamic_cast<DualShotgun*>(currentGun)) {
         for (int i = -2; i <= 2; ++i) {
             float spreadAngle = i * 10.0f * (3.14159265358979323846 / 180.0f);
@@ -226,9 +263,7 @@ void GameFramework::Draw(HDC hdc) {
         bullet->Draw(m_hdcBackBuffer, offsetX, offsetY);
     }
 
-    // 현재 총 그리기
-    currentGun->Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY,
-        cursorPos.x, cursorPos.y, player->IsDirectionLeft());
+    currentGun->Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY, cursorPos.x, cursorPos.y, player->IsDirectionLeft());
 
     int cursorWidth = cursorImage.GetWidth();
     int cursorHeight = cursorImage.GetHeight();
@@ -327,8 +362,7 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         clickImageTimer = 0.2f;
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
-        FireBullet(player->GetX(), player->GetY(), 
-            cursorPos.x + camera->GetOffsetX(), cursorPos.y + camera->GetOffsetY());
+        FireBullet(player->GetX(), player->GetY(), cursorPos.x + camera->GetOffsetX(), cursorPos.y + camera->GetOffsetY());
         break;
     }
 }

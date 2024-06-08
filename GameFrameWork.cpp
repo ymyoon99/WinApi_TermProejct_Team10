@@ -16,7 +16,8 @@ GameFramework::GameFramework()
     lampreySpawnTimer(0.0f),
     yogSpawnTimer(0.0f),
     currentGun(&revolver),
-    frameTime(0.0f) {
+    frameTime(0.0f),
+    gameTimeSeconds(0) {
     Clear();
 
     mapImage.Load(L"./resources/background/background.png");
@@ -33,7 +34,7 @@ GameFramework::GameFramework()
     cursorImage.Load(L"./resources/ui/icon_TakeAim.png");
     clickImage.Load(L"./resources/ui/T_CursorSprite.png");
 
-    CreateEnemies();
+    StartCreateEnemies();
     srand(static_cast<unsigned int>(time(NULL)));
     CreateObstacles(10);
 
@@ -58,10 +59,18 @@ GameFramework::~GameFramework() {
     enemies.clear();
 }
 
+void GameFramework::StartCreateEnemies() {
+    for (int i = 0; i < 20; ++i) {
+        SpawnBrainMonster();
+        SpawnEyeMonster();
+    }
+}
+
 void GameFramework::SpawnBrainMonster() {
     float playerX = player->GetX();
     float playerY = player->GetY();
     float spawnRadius = 600.0f;
+
 
     float angle = (rand() % 360) * 3.14159265358979323846 / 180.0;
     float spawnX = playerX + spawnRadius * cos(angle);
@@ -120,13 +129,6 @@ void GameFramework::SpawnYog() {
     enemies.push_back(new Yog(spawnX, spawnY, 5.0f));
 }
 
-void GameFramework::CreateEnemies() {
-    for (int i = 0; i < 20; ++i) {
-        SpawnBrainMonster();
-        SpawnEyeMonster();
-    }
-}
-
 void GameFramework::DrawBulletUI(HDC hdc) {
     int x = 10;
     int y = 10;
@@ -163,6 +165,13 @@ void GameFramework::DrawReloadingUI(HDC hdc) {
 
 void GameFramework::Update(float frameTime) {
     this->frameTime = frameTime;  // 프레임 타임 저장
+    
+    static float timeAccumulator = 0.0f;
+    timeAccumulator += frameTime;
+    if (timeAccumulator >= 1.0f) {
+        gameTimeSeconds += static_cast<int>(timeAccumulator);
+        timeAccumulator = 0.0f;
+    }
 
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
@@ -212,19 +221,24 @@ void GameFramework::Update(float frameTime) {
 
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
-        SpawnBrainMonster();
-        SpawnEyeMonster();
+        for (int i = 0; i < 20; i++) {
+            SpawnBrainMonster();
+            SpawnEyeMonster();
+        }
         enemySpawnTimer = 0.0f;
     }
 
     bigBoomerSpawnTimer += frameTime;
     if (bigBoomerSpawnTimer >= bigBoomerSpawnInterval) {
         SpawnBigBoomer();
+        SpawnBigBoomer();
+        SpawnBigBoomer();
         bigBoomerSpawnTimer = 0.0f;
     }
 
     lampreySpawnTimer += frameTime;
     if (lampreySpawnTimer >= lampreySpawnInterval) {
+        SpawnLamprey();
         SpawnLamprey();
         lampreySpawnTimer = 0.0f;
     }
@@ -283,15 +297,33 @@ void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
     }
 }
 
-void GameFramework::DrawFrameTime(HDC hdc) {
+void GameFramework::DrawGameTime(HDC hdc) {
     RECT rect;
     rect.left = 350;  // 중앙 상단
     rect.top = 10;
     rect.right = rect.left + 100;
     rect.bottom = rect.top + 20;
 
+    int minutes = gameTimeSeconds / 60;
+    int seconds = gameTimeSeconds % 60;
+
+    wchar_t gameTimeText[100];
+    swprintf_s(gameTimeText, L"Time: %02d:%02d", minutes, seconds);
+
+    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
+    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
+    DrawText(hdc, gameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+}
+
+void GameFramework::DrawFrameTime(HDC hdc) {
+    RECT rect;
+    rect.left = 350;  // 중앙 상단
+    rect.top = 40;
+    rect.right = rect.left + 100;
+    rect.bottom = rect.top + 20;
+
     wchar_t frameTimeText[100];
-    swprintf_s(frameTimeText, L"Frame Time: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
+    swprintf_s(frameTimeText, L"FrameTime: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
 
     SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
     SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
@@ -344,7 +376,8 @@ void GameFramework::Draw(HDC hdc) {
 
     DrawBulletUI(m_hdcBackBuffer);
     DrawReloadingUI(m_hdcBackBuffer);
-    DrawFrameTime(m_hdcBackBuffer);  // 프레임 타임 그리기
+    //DrawFrameTime(m_hdcBackBuffer);
+    DrawGameTime(m_hdcBackBuffer);
 
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);

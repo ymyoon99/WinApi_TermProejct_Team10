@@ -41,7 +41,7 @@ protected:
 // BrainMonster
 class BrainMonster : public Enemy {
 public:
-    BrainMonster(float x, float y, float speed, int health = 100, float eWidth = 27.0f, float eHeight = 36.0f);
+    BrainMonster(float x, float y, float speed, int health = 50, float eWidth = 27.0f, float eHeight = 36.0f);
 protected:
     void LoadImages() override;
 };
@@ -49,7 +49,7 @@ protected:
 // EyeMonster
 class EyeMonster : public Enemy {
 public:
-    EyeMonster(float x, float y, float speed, int health = 100, float eWidth = 37.0f, float eHeight = 29.0f);
+    EyeMonster(float x, float y, float speed, int health = 50, float eWidth = 37.0f, float eHeight = 29.0f);
 protected:
     void LoadImages() override; 
 };
@@ -57,7 +57,7 @@ protected:
 // BigBoomer
 class BigBoomer : public Enemy {
 public:
-    BigBoomer(float x, float y, float speed, int health = 200, float eWidth = 45.0f, float eHeight = 51.0f);
+    BigBoomer(float x, float y, float speed, int health = 500, float eWidth = 45.0f, float eHeight = 51.0f);
 protected:
     void LoadImages() override; 
 };
@@ -65,7 +65,7 @@ protected:
 // Lamprey
 class Lamprey : public Enemy {
 public:
-    Lamprey(float x, float y, float speed, int health = 500, float eWidth = 50.0f, float eHeight = 50.0f);
+    Lamprey(float x, float y, float speed, int health = 1000, float eWidth = 50.0f, float eHeight = 50.0f);
 protected:
     void LoadImages() override;
 };
@@ -73,7 +73,7 @@ protected:
 // Yog
 class Yog : public Enemy {
 public:
-    Yog(float x, float y, float speed, int health = 500, float eWidth = 64.0f, float eHeight = 54.0f);
+    Yog(float x, float y, float speed, int health = 2500, float eWidth = 64.0f, float eHeight = 54.0f);
 protected:
     void LoadImages() override; 
 };

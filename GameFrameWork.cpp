@@ -226,9 +226,15 @@ void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
         bullets.push_back(new ClusterGunBullet(x, y, targetX, targetY + 10));
     }
     else if (dynamic_cast<DualShotgun*>(currentGun)) {
-        for (int i = -2; i <= 2; ++i) {
-            float spreadAngle = i * 10.0f * (3.14159265358979323846 / 180.0f);
-            bullets.push_back(new DualShotgunBullet(x, y, targetX, targetY, spreadAngle));
+        int numBullets = 5; // 발사할 총알의 개수
+        float spreadAngle = 10.0f * (3.14159265358979323846 / 180.0f); // 스프레드 각도(라디안 단위로 변환)
+        float baseAngle = atan2(targetY - y, targetX - x);
+
+        for (int i = 0; i < numBullets; ++i) {
+            float angle = baseAngle + spreadAngle * (i - numBullets / 2);
+            float newTargetX = x + cos(angle) * 100;
+            float newTargetY = y + sin(angle) * 100;
+            bullets.push_back(new DualShotgunBullet(x, y, newTargetX, newTargetY, 0));
         }
     }
 }

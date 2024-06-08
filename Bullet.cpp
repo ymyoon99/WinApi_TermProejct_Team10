@@ -52,4 +52,25 @@ ClusterGunBullet::ClusterGunBullet(float x, float y, float targetX, float target
 
 // DualShotgunBullet
 DualShotgunBullet::DualShotgunBullet(float x, float y, float targetX, float targetY, float spreadAngle)
-    : Bullet(x, y, targetX + cos(spreadAngle) * 100, targetY + sin(spreadAngle) * 100, 100, 300.0f) {}
+    : Bullet(x, y, targetX, targetY, 100, 300.0f) {
+    // targetX와 targetY에 대한 방향 벡터를 계산
+    float dx = targetX - x;
+    float dy = targetY - y;
+    float distance = sqrt(dx * dx + dy * dy);
+
+    // 기본 방향 단위 벡터 계산
+    float directionX = dx / distance;
+    float directionY = dy / distance;
+
+    // spreadAngle을 적용하여 방향을 조정
+    float newDirectionX = directionX * cos(spreadAngle) - directionY * sin(spreadAngle);
+    float newDirectionY = directionX * sin(spreadAngle) + directionY * cos(spreadAngle);
+
+    // 새로운 방향에 따른 targetX, targetY 계산
+    float newTargetX = x + newDirectionX * 100;
+    float newTargetY = y + newDirectionY * 100;
+
+    // Bullet의 방향 업데이트
+    this->directionX = newDirectionX;
+    this->directionY = newDirectionY;
+}

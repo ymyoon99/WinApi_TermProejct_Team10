@@ -39,4 +39,5 @@ public:
 class DualShotgunBullet : public Bullet {
 public:
     DualShotgunBullet(float x, float y, float targetX, float targetY, float spreadAngle);
+    float directionX, directionY;
 };

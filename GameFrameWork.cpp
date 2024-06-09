@@ -161,7 +161,7 @@ void GameFramework::SpawnYog() {
 
 void GameFramework::DrawBulletUI(HDC hdc) {
     int x = 10;
-    int y = 10;
+    int y = 40;
     for (int i = 0; i < currentGun->maxAmmo; i++) {
         if (i < currentGun->currentAmmo) {
             bulletUI.Draw(m_hdcBackBuffer, x + i * 20, y);
@@ -340,8 +340,8 @@ void GameFramework::DrawGameTime(HDC hdc) {
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
     RECT rect;
-    rect.left = 300;  // Áß¾Ó »ó´Ü
-    rect.top = 5;
+    rect.left = 600;  // Áß¾Ó »ó´Ü
+    rect.top = 40;
     rect.right = rect.left + 200;
     rect.bottom = rect.top + 40;
 

@@ -52,5 +52,5 @@ public:
 
     std::vector<CImage> levelUpEffectImages;
     float levelUpEffectTime;
-    const float levelUpEffectDuration = 0.7f;
+    const float levelUpEffectDuration = 1.5f;
 };

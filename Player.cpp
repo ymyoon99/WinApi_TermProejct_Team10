@@ -2,7 +2,6 @@
 #include "GameFrameWork.h"
 #include <cmath>
 #include <iostream>
-#
 
 #define PlayerWidth 20.0f
 #define PlayerHeight 25.0f
@@ -108,12 +107,16 @@ void Player::LoadImages() {
     r_runImages[2].Load(L"./resources/player/rRun_2.png");
     r_runImages[3].Load(L"./resources/player/rRun_3.png");
 
-    levelUpEffectImages.resize(7);
-    for (int i = 0; i < 7; ++i) {
-        wchar_t filePath[64];
-        swprintf_s(filePath, L"./resources/effect/T_LevelUpFX_%d.png", i);
-        levelUpEffectImages[i].Load(filePath);
-    }
+    levelUpEffectImages.resize(9);
+    levelUpEffectImages[0].Load(L"./resources/effect/T_LevelUpFX_0.png");
+    levelUpEffectImages[1].Load(L"./resources/effect/T_LevelUpFX_1.png");
+    levelUpEffectImages[2].Load(L"./resources/effect/T_LevelUpFX_2.png");
+    levelUpEffectImages[3].Load(L"./resources/effect/T_LevelUpFX_3.png");
+    levelUpEffectImages[4].Load(L"./resources/effect/T_LevelUpFX_4.png");
+    levelUpEffectImages[5].Load(L"./resources/effect/T_LevelUpFX_5.png");
+    levelUpEffectImages[6].Load(L"./resources/effect/T_LevelUpFX_6.png");
+    levelUpEffectImages[7].Load(L"./resources/effect/T_LevelUpFX_7.png");
+    levelUpEffectImages[8].Load(L"./resources/effect/T_LevelUpFX_8.png");
 }
 
 void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
@@ -163,10 +166,22 @@ void Player::Draw(HDC hdc, float offsetX, float offsetY) {
     if (levelUpEffectTime > 0) {
         int frame = static_cast<int>((levelUpEffectDuration - levelUpEffectTime) / levelUpEffectDuration * levelUpEffectImages.size());
         if (frame >= 0 && frame < levelUpEffectImages.size()) {
-            levelUpEffectImages[frame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+            if (frame <= 5) {
+                // 번개 이펙트 위치
+                int drawX = static_cast<int>(x + 10.0f - offsetX - levelUpEffectImages[frame].GetWidth() / 2);
+                int drawY = static_cast<int>(y + 12.5f - offsetY - levelUpEffectImages[frame].GetHeight());
+                levelUpEffectImages[frame].Draw(hdc, drawX, drawY);
+            }
+            else {
+                // 날개 이펙트 위치
+                int drawX = static_cast<int>(x + 10.0f - offsetX - levelUpEffectImages[frame].GetWidth() / 2);
+                int drawY = static_cast<int>(y + 12.5f - offsetY - levelUpEffectImages[frame].GetHeight() / 2);
+                levelUpEffectImages[frame].Draw(hdc, drawX, drawY);
+            }
         }
     }
 }
+
 
 void Player::SetDirectionLeft(bool isLeft) {
     directionLeft = isLeft;
@@ -189,7 +204,7 @@ void Player::LevelUp() {
     experienceToNextLevel = static_cast<int>(experienceToNextLevel * 1.3f);
     levelUpEffectTime = levelUpEffectDuration;
 
-    // BrainMonster와 EyeMonster 제거
+    // BrainMonster와 EyeMonster 제거 -> 수정필요
     extern std::vector<Enemy*> enemies;
     auto it = enemies.begin();
     while (it != enemies.end()) {

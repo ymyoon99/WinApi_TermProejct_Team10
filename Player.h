@@ -24,6 +24,12 @@ public:
     void SetDirectionLeft(bool isLeft);
     bool IsDirectionLeft() const;
 
+    void AddExperience(int amount);
+    void DrawExperienceBar(HDC hdc, RECT clientRect);
+
+    void LevelUp();
+    bool CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const;
+
     float x, y;
     float speed;
     float animationSpeed;
@@ -35,11 +41,16 @@ public:
 
     float boundWidth, boundHeight;
 
+    int level;
+    int experience;
+    int experienceToNextLevel;
+
     CImage idleImages[5];
     CImage runImages[4];
     CImage r_idleImages[5];
     CImage r_runImages[4];
 
-private:
-    bool CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const;
+    std::vector<CImage> levelUpEffectImages;
+    float levelUpEffectTime;
+    const float levelUpEffectDuration = 0.7f;
 };

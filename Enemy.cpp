@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "GameFrameWork.h"
 #include <cmath>
 
 #define EnemyWidth 50.0f

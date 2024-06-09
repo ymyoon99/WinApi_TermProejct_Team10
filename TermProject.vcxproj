@@ -25,6 +25,7 @@
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="GameFrameWork.h" />
     <ClInclude Include="Gun.h" />
+    <ClInclude Include="Item.h" />
     <ClInclude Include="Obstacle.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="stdafx.h" />
@@ -36,6 +37,7 @@
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="GameFrameWork.cpp" />
     <ClCompile Include="Gun.cpp" />
+    <ClCompile Include="Item.cpp" />
     <ClCompile Include="Obstacle.cpp" />
     <ClCompile Include="Player.cpp" />
   </ItemGroup>

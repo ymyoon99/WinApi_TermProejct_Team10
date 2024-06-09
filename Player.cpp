@@ -1,9 +1,17 @@
 #include "Player.h"
+#include "GameFrameWork.h"
+#include <cmath>
+#include <iostream>
+#
 
 #define PlayerWidth 20.0f
 #define PlayerHeight 25.0f
 
-Player::Player(float x, float y, float speed, float animationSpeed) : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f), moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false), boundWidth(0), boundHeight(0), directionLeft(false) {
+Player::Player(float x, float y, float speed, float animationSpeed)
+    : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f),
+    moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false),
+    boundWidth(0), boundHeight(0), directionLeft(false),
+    level(1), experience(0), experienceToNextLevel(100), levelUpEffectTime(0.0f) {
     LoadImages();
 }
 
@@ -12,6 +20,8 @@ Player::~Player() {
 
 void Player::Update(float frameTime, const std::vector<Obstacle*>& obstacles) {
     frameTimeAccumulator += frameTime;
+    levelUpEffectTime -= frameTime;
+
     if (frameTimeAccumulator >= animationSpeed) {
         if (isMoving) {
             currentFrame = (currentFrame + 1) % 4; // Run 애니메이션이 4 프레임이므로
@@ -97,6 +107,13 @@ void Player::LoadImages() {
     r_runImages[1].Load(L"./resources/player/rRun_1.png");
     r_runImages[2].Load(L"./resources/player/rRun_2.png");
     r_runImages[3].Load(L"./resources/player/rRun_3.png");
+
+    levelUpEffectImages.resize(7);
+    for (int i = 0; i < 7; ++i) {
+        wchar_t filePath[64];
+        swprintf_s(filePath, L"./resources/effect/T_LevelUpFX_%d.png", i);
+        levelUpEffectImages[i].Load(filePath);
+    }
 }
 
 void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
@@ -141,6 +158,14 @@ void Player::Draw(HDC hdc, float offsetX, float offsetY) {
             }
         }
     }
+
+    // 레벨업 이펙트 그리기
+    if (levelUpEffectTime > 0) {
+        int frame = static_cast<int>((levelUpEffectDuration - levelUpEffectTime) / levelUpEffectDuration * levelUpEffectImages.size());
+        if (frame >= 0 && frame < levelUpEffectImages.size()) {
+            levelUpEffectImages[frame].Draw(hdc, static_cast<int>(x - offsetX), static_cast<int>(y - offsetY));
+        }
+    }
 }
 
 void Player::SetDirectionLeft(bool isLeft) {
@@ -149,4 +174,53 @@ void Player::SetDirectionLeft(bool isLeft) {
 
 bool Player::IsDirectionLeft() const {
     return directionLeft;
+}
+
+void Player::AddExperience(int amount) {
+    experience += amount;
+    while (experience >= experienceToNextLevel) {
+        experience -= experienceToNextLevel;
+        LevelUp();
+    }
+}
+
+void Player::LevelUp() {
+    level++;
+    experienceToNextLevel = static_cast<int>(experienceToNextLevel * 1.3f);
+    levelUpEffectTime = levelUpEffectDuration;
+
+    // BrainMonster와 EyeMonster 제거
+    extern std::vector<Enemy*> enemies;
+    auto it = enemies.begin();
+    while (it != enemies.end()) {
+        if (dynamic_cast<BrainMonster*>(*it) || dynamic_cast<EyeMonster*>(*it)) {
+            delete* it;
+            it = enemies.erase(it);
+        }
+        else {
+            ++it;
+        }
+    }
+}
+
+void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
+    // 회색 배경 (전체 너비)
+    RECT backgroundRect;
+    backgroundRect.left = 0;
+    backgroundRect.top = 0;
+    backgroundRect.right = clientRect.right;
+    backgroundRect.bottom = 20;
+
+    HBRUSH grayBrush = CreateSolidBrush(RGB(128, 128, 128));
+    FillRect(hdc, &backgroundRect, grayBrush);
+    DeleteObject(grayBrush);
+
+    // 연한 초록색 경험치 바 (현재 경험치에 비례한 너비)
+    float percent = static_cast<float>(experience) / experienceToNextLevel;
+    RECT experienceRect = backgroundRect;
+    experienceRect.right = static_cast<LONG>(percent * clientRect.right);
+
+    HBRUSH greenBrush = CreateSolidBrush(RGB(144, 238, 144));
+    FillRect(hdc, &experienceRect, greenBrush);
+    DeleteObject(greenBrush);
 }

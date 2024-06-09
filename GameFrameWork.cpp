@@ -2,6 +2,7 @@
 #include "GameFramework.h"
 
 extern GameFramework gameframework;
+std::vector<Enemy*> enemies;
 
 GameFramework::GameFramework()
     : m_hdcBackBuffer(nullptr),
@@ -193,6 +194,10 @@ void GameFramework::DrawReloadingUI(HDC hdc) {
     }
 }
 
+void GameFramework::SpawnItem(float x, float y) {
+    items.push_back(new Item(x, y));
+}
+
 void GameFramework::Update(float frameTime) {
     this->frameTime = frameTime;  // 프레임 타임 저장
 
@@ -206,12 +211,33 @@ void GameFramework::Update(float frameTime) {
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
+    // 아이템 업데이트 및 수집
+    auto itemIter = items.begin();
+    while (itemIter != items.end()) {
+        Item* item = *itemIter;
+        item->Update(frameTime);
+
+        // 플레이어와 아이템의 충돌 검사 및 수집
+        if (abs(player->GetX() - item->GetX()) < 20.0f && abs(player->GetY() - item->GetY()) < 25.0f) {
+            player->AddExperience(10);
+            delete item;
+            itemIter = items.erase(itemIter);
+        }
+        else {
+            ++itemIter;
+        }
+    }
+
+    // 적 업데이트
     auto enemyIter = enemies.begin();
     while (enemyIter != enemies.end()) {
         Enemy* enemy = *enemyIter;
         enemy->Update(frameTime, player->GetX(), player->GetY(), obstacles);
 
         if (enemy->IsDead()) {
+            // 적이 죽을 때 아이템 드롭
+            SpawnItem(enemy->GetX(), enemy->GetY());
+
             delete enemy;
             enemyIter = enemies.erase(enemyIter);
         }
@@ -220,6 +246,7 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
+    // 총알 업데이트
     auto bulletIter = bullets.begin();
     while (bulletIter != bullets.end()) {
         Bullet* bullet = *bulletIter;
@@ -252,6 +279,7 @@ void GameFramework::Update(float frameTime) {
             ++bulletIter;
         }
     }
+
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
         for (int i = 0; i < 20; i++) {
@@ -403,6 +431,10 @@ void GameFramework::Draw(HDC hdc) {
         bullet->Draw(m_hdcBackBuffer, offsetX, offsetY);
     }
 
+    for (Item* item : items) {
+        item->Draw(m_hdcBackBuffer, offsetX, offsetY);
+    }
+
     currentGun->Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY, cursorPos.x, cursorPos.y, player->IsDirectionLeft());
 
     int cursorWidth = cursorImage.GetWidth();
@@ -421,6 +453,7 @@ void GameFramework::Draw(HDC hdc) {
     DrawReloadingUI(m_hdcBackBuffer);
     //DrawFrameTime(m_hdcBackBuffer);
     DrawGameTime(m_hdcBackBuffer);
+    player->DrawExperienceBar(m_hdcBackBuffer, clientRect);
 
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);

@@ -1,11 +1,12 @@
 #include "Gun.h"
 
-Gun::Gun(int maxAmmo) : maxAmmo(maxAmmo), currentAmmo(maxAmmo), reloading(false), reloadTime(2.0f), reloadTimer(0.0f) {}
+Gun::Gun(int maxAmmo) : maxAmmo(maxAmmo), currentAmmo(maxAmmo), reloading(false), reloadTime(1.0f), reloadTimer(0.0f) {}
 Gun::~Gun() {}
 
 void Gun::Reload() {
     reloading = true;
     reloadTimer = 0.0f;
+    reloadFrame = 0;
 }
 
 bool Gun::FireBullet() {
@@ -28,6 +29,12 @@ void Gun::UpdateReload(float frameTime) {
             reloading = false;
             currentAmmo = maxAmmo;
         }
+        else {
+            // reloadTime을 각 이미지 프레임에 분배하여 재생
+            int totalFrames = sizeof(reloadImages) / sizeof(reloadImages[0]);
+            float timePerFrame = reloadTime / totalFrames;
+            reloadFrame = static_cast<int>(reloadTimer / timePerFrame) % totalFrames;
+        }
     }
 }
 
@@ -38,10 +45,19 @@ void Gun::Draw(HDC hdc, float playerX, float playerY, float cursorX, float curso
     float angle = atan2(dy, dx) * 180.0 / 3.14159265358979323846; 
     // Angle in degrees
 
-    CImage* currentGunImage = directionLeft ? &r_gunImage : &gunImage;
+    // 현재 총 이미지 설정
+    CImage* currentGunImage = nullptr;
 
+    if (reloading) {
+        currentGunImage = &reloadImages[reloadFrame];
+    }
+    else {
+        currentGunImage = directionLeft ? &r_gunImage : &gunImage;
+    }
+
+    // 이미지가 로드되지 않았으면 그리지 않음 : 디버깅
     if (currentGunImage->IsNull()) {
-        return; // 이미지가 로드되지 않았으면 그리지 않음
+        return; 
     }
 
     int gunWidth = currentGunImage->GetWidth();
@@ -87,6 +103,15 @@ void Revolver::LoadImages() {
     if (FAILED(r_gunImage.Load(L"./resources/gun/rRevolverStill.png"))) {
         MessageBox(NULL, L"Failed to load rRevolverStill.png", L"Error", MB_OK);
     }
+
+    // 장전 이미지 로드
+    for (int i = 0; i < 3; ++i) {
+        wchar_t path[100];
+        swprintf_s(path, L"./resources/gun/T_Gun_Reload_%d.png", i);
+        if (FAILED(reloadImages[i].Load(path))) {
+            MessageBox(NULL, L"Failed to load reload image", L"Error", MB_OK);
+        }
+    }
 }
 
 // HeadshotGun class implementation
@@ -100,6 +125,15 @@ void HeadshotGun::LoadImages() {
     }
     if (FAILED(r_gunImage.Load(L"./resources/gun/rHeadshot_Gun.png"))) {
         MessageBox(NULL, L"Failed to load rHeadshot_Gun.png", L"Error", MB_OK);
+    }
+
+    // 장전 이미지 로드
+    for (int i = 0; i < 3; ++i) {
+        wchar_t path[100];
+        swprintf_s(path, L"./resources/gun/T_Gun_Reload_%d.png", i);
+        if (FAILED(reloadImages[i].Load(path))) {
+            MessageBox(NULL, L"Failed to load reload image", L"Error", MB_OK);
+        }
     }
 }
 
@@ -115,6 +149,15 @@ void ClusterGun::LoadImages() {
     if (FAILED(r_gunImage.Load(L"./resources/gun/rCluster_Gun.png"))) {
         MessageBox(NULL, L"Failed to load rCluster_Gun.png", L"Error", MB_OK);
     }
+
+    // 장전 이미지 로드
+    for (int i = 0; i < 3; ++i) {
+        wchar_t path[100];
+        swprintf_s(path, L"./resources/gun/T_Gun_Reload_%d.png", i);
+        if (FAILED(reloadImages[i].Load(path))) {
+            MessageBox(NULL, L"Failed to load reload image", L"Error", MB_OK);
+        }
+    }
 }
 
 // DualShotgun class implementation
@@ -128,5 +171,14 @@ void DualShotgun::LoadImages() {
     }
     if (FAILED(r_gunImage.Load(L"./resources/gun/rDualShotgun_Gun.png"))) {
         MessageBox(NULL, L"Failed to load rDualShotgun.png", L"Error", MB_OK);
+    }
+
+    // 장전 이미지 로드
+    for (int i = 0; i < 3; ++i) {
+        wchar_t path[100];
+        swprintf_s(path, L"./resources/gun/T_Gun_Reload_%d.png", i);
+        if (FAILED(reloadImages[i].Load(path))) {
+            MessageBox(NULL, L"Failed to load reload image", L"Error", MB_OK);
+        }
     }
 }

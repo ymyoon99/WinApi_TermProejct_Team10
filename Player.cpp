@@ -1,10 +1,13 @@
 #include "Player.h"
 #include "GameFrameWork.h"
+
 #include <cmath>
 #include <iostream>
 
 #define PlayerWidth 20.0f
 #define PlayerHeight 25.0f
+
+extern HFONT hFont;
 
 Player::Player(float x, float y, float speed, float animationSpeed)
     : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f),
@@ -182,7 +185,6 @@ void Player::Draw(HDC hdc, float offsetX, float offsetY) {
     }
 }
 
-
 void Player::SetDirectionLeft(bool isLeft) {
     directionLeft = isLeft;
 }
@@ -201,21 +203,12 @@ void Player::AddExperience(int amount) {
 
 void Player::LevelUp() {
     level++;
-    experienceToNextLevel = static_cast<int>(experienceToNextLevel * 1.3f);
+    // 경험치 요구량
+    experienceToNextLevel = static_cast<int>(experienceToNextLevel * 1.5f);
     levelUpEffectTime = levelUpEffectDuration;
 
-    // BrainMonster와 EyeMonster 제거 -> 수정필요
-    extern std::vector<Enemy*> enemies;
-    auto it = enemies.begin();
-    while (it != enemies.end()) {
-        if (dynamic_cast<BrainMonster*>(*it) || dynamic_cast<EyeMonster*>(*it)) {
-            delete* it;
-            it = enemies.erase(it);
-        }
-        else {
-            ++it;
-        }
-    }
+    // 레벨업 할 시 기능 추가
+
 }
 
 void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
@@ -224,7 +217,7 @@ void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
     backgroundRect.left = 0;
     backgroundRect.top = 0;
     backgroundRect.right = clientRect.right;
-    backgroundRect.bottom = 20;
+    backgroundRect.bottom = 25;
 
     HBRUSH grayBrush = CreateSolidBrush(RGB(128, 128, 128));
     FillRect(hdc, &backgroundRect, grayBrush);
@@ -238,4 +231,37 @@ void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
     HBRUSH greenBrush = CreateSolidBrush(RGB(144, 238, 144));
     FillRect(hdc, &experienceRect, greenBrush);
     DeleteObject(greenBrush);
+
+    HFONT hFont25 = CreateFont(
+        -24,                      // Height of the font
+        0,                        // Width of the font
+        0,                        // Escapement angle
+        0,                        // Orientation angle
+        FW_NORMAL,                // Font weight
+        FALSE,                    // Italic attribute
+        FALSE,                    // Underline attribute
+        FALSE,                    // Strikeout attribute
+        ANSI_CHARSET,             // Character set identifier
+        OUT_TT_PRECIS,            // Output precision
+        CLIP_DEFAULT_PRECIS,      // Clipping precision
+        ANTIALIASED_QUALITY,      // Output quality
+        DEFAULT_PITCH | FF_DONTCARE,  // Pitch and family
+        L"ChevyRay - Lantern"     // Font name
+    );
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont25);
+
+    wchar_t levelText[20];
+    swprintf_s(levelText, L"LEVEL %d", level);
+
+    RECT textRect;
+    textRect.left = 0;
+    textRect.top = 0;
+    textRect.right = clientRect.right;
+    textRect.bottom = 30;
+    DrawText(hdc, levelText, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    // 원래 폰트로 복원하고 새로 생성한 폰트 삭제
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont25);
 }

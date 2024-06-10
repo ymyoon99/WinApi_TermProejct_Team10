@@ -3,6 +3,9 @@
 #include <atlimage.h>
 #include <vector>
 #include "Obstacle.h"
+#include "Enemy.h"      
+#include "Camera.h"
+
 
 class Player {
 public:

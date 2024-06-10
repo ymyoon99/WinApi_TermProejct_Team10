@@ -1,7 +1,7 @@
 #include "Obstacle.h"
 
 Obstacle::Obstacle(float x, float y) : x(x), y(y) {
-    obstacleImage.Load(L"./resources/ui/HeartAnimation_0.png");
+    obstacleImage.Load(L"./resources/background/T_TempleTallColumn.png");
 }
 
 Obstacle::~Obstacle() {
@@ -19,10 +19,10 @@ float Obstacle::GetY() const {
     return y;
 }
 
-float Obstacle::GetWidth() const {  // 추가
+float Obstacle::GetWidth() const { 
     return static_cast<float>(obstacleImage.GetWidth());
 }
 
-float Obstacle::GetHeight() const { // 추가
+float Obstacle::GetHeight() const {
     return static_cast<float>(obstacleImage.GetHeight());
 }

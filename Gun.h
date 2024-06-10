@@ -27,6 +27,9 @@ public:
     constexpr double DEG2RAD(double deg) const {
         return deg * (3.14159265358979323846 / 180.0);
     }
+
+    CImage reloadImages[3]; // 장전 이미지를 저장할 배열
+    int reloadFrame;
 };
 
 class Revolver : public Gun {

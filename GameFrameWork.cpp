@@ -2,6 +2,7 @@
 #include "GameFramework.h"
 
 extern GameFramework gameframework;
+extern HFONT hFont;
 std::vector<Enemy*> enemies;
 
 GameFramework::GameFramework()
@@ -43,15 +44,14 @@ GameFramework::GameFramework()
     bulletUsedUI.Load(L"./resources/ui/bullet_used_ui.png");
 }
 
-
 HFONT hFont = nullptr;
 
 void InitializeFont() {
 
-    AddFontResourceEx(L"./resource/font/ChevyRay - Lantern.ttf", FR_PRIVATE, nullptr);
+    AddFontResourceEx(L"./resources/font/ChevyRay - Lantern.ttf", FR_PRIVATE, nullptr);
 
     hFont = CreateFont(
-        -24,                      // Height of the font
+        -30,                      // Height of the font
         0,                        // Width of the font
         0,                        // Escapement angle
         0,                        // Orientation angle
@@ -91,7 +91,7 @@ GameFramework::~GameFramework() {
 }
 
 void GameFramework::StartCreateEnemies() {
-    for (int i = 0; i < 20; ++i) {
+    for (int i = 0; i < 10; ++i) {
         SpawnBrainMonster();
         SpawnEyeMonster();
     }
@@ -280,9 +280,10 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
+    // 적 스폰 시스템
     enemySpawnTimer += frameTime;
     if (enemySpawnTimer >= enemySpawnInterval) {
-        for (int i = 0; i < 20; i++) {
+        for (int i = 0; i < 10; i++) {
             SpawnBrainMonster();
             SpawnEyeMonster();
         }
@@ -310,6 +311,7 @@ void GameFramework::Update(float frameTime) {
         yogSpawnTimer = 0.0f;
     }
 
+    // 커서 이미지 업데이트
     if (showClickImage) {
         clickImageTimer -= frameTime;
         if (clickImageTimer <= 0.0f) {
@@ -317,6 +319,7 @@ void GameFramework::Update(float frameTime) {
         }
     }
 
+    // 총 장전 업데이트
     currentGun->UpdateReload(frameTime);
 }
 
@@ -364,11 +367,11 @@ void GameFramework::DrawGameTime(HDC hdc) {
         InitializeFont();
     }
 
-    // Store the original font
+    // 기존 폰트 저장
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
     RECT rect;
-    rect.left = 600;  // 중앙 상단
+    rect.left = 625;  // 중앙 상단
     rect.top = 40;
     rect.right = rect.left + 200;
     rect.bottom = rect.top + 40;
@@ -377,7 +380,7 @@ void GameFramework::DrawGameTime(HDC hdc) {
     int seconds = gameTimeSeconds % 60;
 
     wchar_t gameTimeText[100];
-    swprintf_s(gameTimeText, L"Time: %02d:%02d", minutes, seconds);
+    swprintf_s(gameTimeText, L"%02d:%02d", minutes, seconds);
 
     SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
     SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨

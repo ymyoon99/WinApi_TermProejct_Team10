@@ -138,6 +138,11 @@ void GameFramework::ResetGame() {
     StartCreateEnemies();
     CreateObstacles(20);
 }
+
+void GameFramework::PlayGameSound(LPCWSTR soundFile) {
+    PlaySound(soundFile, NULL, SND_FILENAME | SND_ASYNC);
+}
+
 void GameFramework::DrawMainMenu(HDC hdc) {
     if (!hFont) {
         InitializeFont();
@@ -563,6 +568,9 @@ void GameFramework::CreateObstacles(int numObstacles) {
 
 void GameFramework::FireBullet(float x, float y, float targetX, float targetY) {
     if (currentGun->FireBullet()) {
+
+        PlayGameSound(L"./resources/sounds/single_shot.wav");
+
         if (dynamic_cast<Revolver*>(currentGun)) {
             bullets.push_back(new RevolverBullet(x, y, targetX, targetY));
         }
@@ -711,7 +719,7 @@ void GameFramework::Draw(HDC hdc) {
     mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
     player->Draw(m_hdcBackBuffer, offsetX, offsetY);
-    player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
+    //player->DrawBoundingBox(m_hdcBackBuffer, offsetX, offsetY);
 
     for (Enemy* enemy : enemies) {
         enemy->Draw(m_hdcBackBuffer, offsetX, offsetY);
@@ -953,7 +961,7 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
 
-        if (isPaused || isShowingUpgradePanel) {
+        if (isPaused || isShowingUpgradePanel || isMainMenu) {
             return;
         }
         else {

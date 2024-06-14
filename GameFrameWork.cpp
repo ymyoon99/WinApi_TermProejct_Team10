@@ -8,21 +8,15 @@ std::vector<Enemy*> enemies;
 
 GameFramework::GameFramework()
     : m_hdcBackBuffer(nullptr),
-    m_hBitmap(nullptr),
-    m_hOldBitmap(nullptr),
-    player(nullptr),
-    camera(nullptr),
-    showClickImage(false),
-    clickImageTimer(0.0f),
-    enemySpawnTimer(0.0f),
-    bigBoomerSpawnTimer(0.0f),
-    lampreySpawnTimer(0.0f),
-    yogSpawnTimer(0.0f),
+    m_hBitmap(nullptr), m_hOldBitmap(nullptr),
+    player(nullptr), camera(nullptr),
+    showClickImage(false), clickImageTimer(0.0f),
+    enemySpawnTimer(0.0f), bigBoomerSpawnTimer(0.0f), lampreySpawnTimer(0.0f),  yogSpawnTimer(0.0f),
     currentGun(&revolver),
-    frameTime(0.0f),
-    gameTimeSeconds(0),
+    frameTime(0.0f), gameTimeSeconds(0),
     isPaused(false),
-    isShowingUpgradePanel(false) {
+    isShowingUpgradePanel(false), 
+    isMainMenu(true), menuAnimationFrame(0), menuAnimationAccumulator(0.0f), selectedMenuItem(0) {
     Clear();
 
     mapImage.Load(L"./resources/background/background.png");
@@ -43,10 +37,14 @@ GameFramework::GameFramework()
 
     StartCreateEnemies();
     srand(static_cast<unsigned int>(time(NULL)));
-    CreateObstacles(10);
+    CreateObstacles(20);
 
     bulletUI.Load(L"./resources/ui/bullet_ui.png");
     bulletUsedUI.Load(L"./resources/ui/bullet_used_ui.png");
+
+    menuImages[0].Load(L"./resources/background/Title_0.png");
+    menuImages[1].Load(L"./resources/background/Title_1.png");
+    menuImages[2].Load(L"./resources/background/Title_2.png");
 }
 
 HFONT hFont = nullptr;
@@ -93,6 +91,110 @@ GameFramework::~GameFramework() {
         delete enemy;
     }
     enemies.clear();
+
+    for (Item* item : items) {
+        delete item;
+    }
+    items.clear();
+}
+
+void GameFramework::ResetGame() {
+    // 플레이어 재생성
+    delete player;
+    player = new Player(mapImage.GetWidth() / 2.0f, mapImage.GetHeight() / 2.0f, 2.0f, 0.2f, this);
+    player->SetBounds(mapImage.GetWidth(), mapImage.GetHeight());
+
+    // 적 제거
+    for (Enemy* enemy : enemies) {
+        delete enemy;
+    }
+    enemies.clear();
+
+    // 아이템 제거
+    for (Item* item : items) {
+        delete item;
+    }
+    items.clear();
+
+    // 장애물 제거
+    for (Obstacle* obstacle : obstacles) {
+        delete obstacle;
+    }
+    obstacles.clear();
+
+    // 시간 초기화
+    gameTimeSeconds = 0;
+
+    // 기타 필요한 초기화 작업
+    enemySpawnTimer = 0.0f;
+    bigBoomerSpawnTimer = 0.0f;
+    lampreySpawnTimer = 0.0f;
+    yogSpawnTimer = 0.0f;
+
+    // 카메라 초기화
+    camera->SetBounds(mapImage.GetWidth(), mapImage.GetHeight());
+
+    // 적 및 장애물 재생성
+    StartCreateEnemies();
+    CreateObstacles(20);
+}
+void GameFramework::DrawMainMenu(HDC hdc) {
+    if (!hFont) {
+        InitializeFont();
+    }
+    RECT clientRect;
+    GetClientRect(m_hWnd, &clientRect);
+
+    menuAnimationAccumulator += frameTime;
+    if (menuAnimationAccumulator >= 1.0f) {
+        menuAnimationFrame = (menuAnimationFrame + 1) % 3; 
+        menuAnimationAccumulator = 0.0f;
+    }
+
+    if (!menuImages[menuAnimationFrame].IsNull()) {
+        menuImages[menuAnimationFrame].Draw(hdc, 0, 0, clientRect.right, clientRect.bottom);
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+    SetBkMode(hdc, TRANSPARENT);
+    RECT startRect = { 300, 300, 500, 350 };
+    RECT quitRect = { 300, 360, 500, 410 };
+
+    SetTextColor(hdc, selectedMenuItem == 0 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+    DrawText(hdc, L"START", -1, &startRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SetTextColor(hdc, selectedMenuItem == 1 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+    DrawText(hdc, L"QUIT", -1, &quitRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(hdc, hOldFont);
+}
+
+void GameFramework::HandleMenuInput(WPARAM wParam) {
+    switch (wParam) {
+    case VK_UP:
+        selectedMenuItem = (selectedMenuItem - 1 + 2) % 2;
+        break;
+    case VK_DOWN:
+        selectedMenuItem = (selectedMenuItem + 1) % 2;
+        break;
+    case VK_RETURN:
+        if (selectedMenuItem == 0) {
+            ToggleMainMenu();
+            ResetGame();
+        }
+        else if (selectedMenuItem == 1) {
+            PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+        }
+        break;
+    }
+}
+
+void GameFramework::ToggleMainMenu() {
+    isMainMenu = !isMainMenu;
+    if (isMainMenu) {
+        ResetGame();
+    }
 }
 
 void GameFramework::TogglePause() {
@@ -245,6 +347,8 @@ void GameFramework::SpawnItem(float x, float y) {
 }
 
 void GameFramework::Update(float frameTime) {
+
+    if (isMainMenu) {}
    
     if (isPaused) return;
 
@@ -598,6 +702,12 @@ void GameFramework::Draw(HDC hdc) {
     float offsetX = camera->GetOffsetX();
     float offsetY = camera->GetOffsetY();
 
+    if (isMainMenu) {
+        DrawMainMenu(m_hdcBackBuffer);
+        BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
+        return;
+    }
+
     mapImage.Draw(m_hdcBackBuffer, -static_cast<int>(offsetX), -static_cast<int>(offsetY));
 
     player->Draw(m_hdcBackBuffer, offsetX, offsetY);
@@ -659,6 +769,7 @@ void GameFramework::Draw(HDC hdc) {
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }
 
+// 업그레이드 창 키 입력
 void GameFramework::HandleUpgradeInput() {
     if (!isShowingUpgradePanel) return;
 
@@ -700,13 +811,16 @@ void GameFramework::HandleUpgradeInput() {
     }
 }
 
-void GameFramework::OnMenuSelect() {
+// 정지화면 메뉴 인덱스
+void GameFramework::PauseMenuSelect() {
     switch (selectedMenuIndex) {
     case 0:
         TogglePause();
         break;
     case 1:
-        // Main menu로 돌아가는 로직 추가
+        isPaused = false;
+        isMainMenu = true;
+        ResetGame();
         break;
     case 2:
         PostMessage(m_hWnd, WM_CLOSE, 0, 0);
@@ -714,8 +828,8 @@ void GameFramework::OnMenuSelect() {
     }
 }
 
-// 키 다운 이벤트 처리
-void GameFramework::OnKeyDown(WPARAM wParam) {
+// 정지화면 키 다운 이벤트 처리
+void GameFramework::PauseKeyDown(WPARAM wParam) {
     switch (wParam) {
     case VK_UP:
         selectedMenuIndex = (selectedMenuIndex - 1 + 3) % 3; // 메뉴 항목 수에 따라 변경
@@ -724,7 +838,7 @@ void GameFramework::OnKeyDown(WPARAM wParam) {
         selectedMenuIndex = (selectedMenuIndex + 1) % 3;
         break;
     case VK_RETURN:
-        OnMenuSelect();
+        PauseMenuSelect();
         break;
     }
 }
@@ -738,7 +852,17 @@ void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lP
     if (isPaused) {
         switch (iMessage) {
         case WM_KEYDOWN:
-            OnKeyDown(wParam);
+            PauseKeyDown(wParam);
+            break;
+        case WM_KEYUP:
+            OnKeyUp(wParam);
+            break;
+        }
+    }
+    else if (isMainMenu) {
+        switch (iMessage) {
+        case WM_KEYDOWN:
+            HandleMenuInput(wParam);
             break;
         case WM_KEYUP:
             OnKeyUp(wParam);

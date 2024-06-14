@@ -56,4 +56,23 @@ public:
     std::vector<CImage> levelUpEffectImages;
     float levelUpEffectTime;
     const float levelUpEffectDuration = 1.5f;
+
+    // New health-related attributes
+    int health;
+    int maxHealth;
+    float invincibilityTime;
+    float currentInvincibilityTime;
+
+    // Heart animation frames
+    std::vector<CImage> heartImages;
+    int heartAnimationFrame;
+    float heartAnimationSpeed;
+    float heartAnimationAccumulator;
+
+    // New methods
+    void TakeDamage(int amount);
+    void DrawHealth(HDC hdc, float offsetX, float offsetY);
+    void DrawInvincibilityIndicator(HDC hdc, float offsetX, float offsetY);
+    bool IsInvincible() const;
+    void UpdateInvincibility(float frameTime);
 };

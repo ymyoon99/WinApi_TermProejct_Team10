@@ -162,7 +162,7 @@ void GameFramework::SpawnYog() {
 
 void GameFramework::DrawBulletUI(HDC hdc) {
     int x = 10;
-    int y = 40;
+    int y = 80;
     for (int i = 0; i < currentGun->maxAmmo; i++) {
         if (i < currentGun->currentAmmo) {
             bulletUI.Draw(m_hdcBackBuffer, x + i * 20, y);
@@ -208,9 +208,19 @@ void GameFramework::Update(float frameTime) {
         timeAccumulator = 0.0f;
     }
 
+    // 플레이어 업데이트
     player->Update(frameTime, obstacles);
     camera->Update(player->GetX(), player->GetY());
 
+    // 플레이어와 적 충돌체크
+    for (Enemy* enemy : enemies) {
+        if (!player->IsInvincible() &&
+            abs(player->GetX() - enemy->GetX()) < (20.0f + enemy->GetWidth()) / 2 &&
+            abs(player->GetY() - enemy->GetY()) < (25.0f + enemy->GetHeight()) / 2) {
+            player->TakeDamage(1);
+        }
+    }
+    
     // 아이템 업데이트 및 수집
     auto itemIter = items.begin();
     while (itemIter != items.end()) {
@@ -440,6 +450,11 @@ void GameFramework::Draw(HDC hdc) {
 
     currentGun->Draw(m_hdcBackBuffer, player->GetX() - offsetX, player->GetY() - offsetY, cursorPos.x, cursorPos.y, player->IsDirectionLeft());
 
+    // Draw UI
+    player->DrawHealth(m_hdcBackBuffer, offsetX, offsetY);
+    player->DrawExperienceBar(m_hdcBackBuffer, clientRect);
+    player->DrawInvincibilityIndicator(m_hdcBackBuffer, offsetX, offsetY);
+
     int cursorWidth = cursorImage.GetWidth();
     int cursorHeight = cursorImage.GetHeight();
     int clickWidth = clickImage.GetWidth();
@@ -456,8 +471,6 @@ void GameFramework::Draw(HDC hdc) {
     DrawReloadingUI(m_hdcBackBuffer);
     //DrawFrameTime(m_hdcBackBuffer);
     DrawGameTime(m_hdcBackBuffer);
-    player->DrawExperienceBar(m_hdcBackBuffer, clientRect);
-
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }

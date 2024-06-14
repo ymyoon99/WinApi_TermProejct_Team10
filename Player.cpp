@@ -13,7 +13,9 @@ Player::Player(float x, float y, float speed, float animationSpeed)
     : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f),
     moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false),
     boundWidth(0), boundHeight(0), directionLeft(false),
-    level(1), experience(0), experienceToNextLevel(100), levelUpEffectTime(0.0f) {
+    level(1), experience(0), experienceToNextLevel(100), levelUpEffectTime(0.0f),
+    health(4), maxHealth(4), invincibilityTime(2.0f), currentInvincibilityTime(0.0f),
+    heartAnimationFrame(0), heartAnimationSpeed(0.2f), heartAnimationAccumulator(0.0f) {
     LoadImages();
 }
 
@@ -23,6 +25,7 @@ Player::~Player() {
 void Player::Update(float frameTime, const std::vector<Obstacle*>& obstacles) {
     frameTimeAccumulator += frameTime;
     levelUpEffectTime -= frameTime;
+    UpdateInvincibility(frameTime);
 
     if (frameTimeAccumulator >= animationSpeed) {
         if (isMoving) {
@@ -120,6 +123,101 @@ void Player::LoadImages() {
     levelUpEffectImages[6].Load(L"./resources/effect/T_LevelUpFX_6.png");
     levelUpEffectImages[7].Load(L"./resources/effect/T_LevelUpFX_7.png");
     levelUpEffectImages[8].Load(L"./resources/effect/T_LevelUpFX_8.png");
+
+    heartImages.resize(4);
+    heartImages[0].Load(L"./resources/ui/HeartAnimation_0.png");
+    heartImages[1].Load(L"./resources/ui/HeartAnimation_1.png");
+    heartImages[2].Load(L"./resources/ui/HeartAnimation_2.png");
+    heartImages[3].Load(L"./resources/ui/HeartAnimation_3.png");
+}
+
+void Player::DrawHealth(HDC hdc, float offsetX, float offsetY) {
+    heartAnimationAccumulator += heartAnimationSpeed;
+    if (heartAnimationAccumulator >= 1.0f) {
+        heartAnimationFrame = (heartAnimationFrame + 1) % 3; // Loop through 0, 1, 2
+        heartAnimationAccumulator = 0.0f;
+    }
+
+    for (int i = 0; i < maxHealth; ++i) {
+        int drawX = 20 + i * 40; // Adjust the spacing as needed
+        int drawY = 40;
+        if (i < health) {
+            heartImages[heartAnimationFrame].Draw(hdc, drawX, drawY);
+        }
+        else {
+            heartImages[3].Draw(hdc, drawX, drawY);
+        }
+    }
+}
+
+void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
+    // 회색 배경 (전체 너비)
+    RECT backgroundRect;
+    backgroundRect.left = 0;
+    backgroundRect.top = 0;
+    backgroundRect.right = clientRect.right;
+    backgroundRect.bottom = 25;
+
+    HBRUSH grayBrush = CreateSolidBrush(RGB(128, 128, 128));
+    FillRect(hdc, &backgroundRect, grayBrush);
+    DeleteObject(grayBrush);
+
+    // 연한 초록색 경험치 바 (현재 경험치에 비례한 너비)
+    float percent = static_cast<float>(experience) / experienceToNextLevel;
+    RECT experienceRect = backgroundRect;
+    experienceRect.right = static_cast<LONG>(percent * clientRect.right);
+
+    HBRUSH greenBrush = CreateSolidBrush(RGB(144, 238, 144));
+    FillRect(hdc, &experienceRect, greenBrush);
+    DeleteObject(greenBrush);
+
+    HFONT hFont25 = CreateFont(
+        -24,                      // Height of the font
+        0,                        // Width of the font
+        0,                        // Escapement angle
+        0,                        // Orientation angle
+        FW_NORMAL,                // Font weight
+        FALSE,                    // Italic attribute
+        FALSE,                    // Underline attribute
+        FALSE,                    // Strikeout attribute
+        ANSI_CHARSET,             // Character set identifier
+        OUT_TT_PRECIS,            // Output precision
+        CLIP_DEFAULT_PRECIS,      // Clipping precision
+        ANTIALIASED_QUALITY,      // Output quality
+        DEFAULT_PITCH | FF_DONTCARE,  // Pitch and family
+        L"ChevyRay - Lantern"     // Font name
+    );
+
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont25);
+
+    wchar_t levelText[20];
+    swprintf_s(levelText, L"LEVEL %d", level);
+
+    RECT textRect;
+    textRect.left = 0;
+    textRect.top = 0;
+    textRect.right = clientRect.right;
+    textRect.bottom = 30;
+    DrawText(hdc, levelText, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    // 원래 폰트로 복원하고 새로 생성한 폰트 삭제
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont25);
+}
+
+void Player::DrawInvincibilityIndicator(HDC hdc, float offsetX, float offsetY) {
+    if (IsInvincible()) {
+        HPEN hPen = CreatePen(PS_SOLID, 2, RGB(173, 216, 230)); // Light blue color
+        HBRUSH hBrush = (HBRUSH)GetStockObject(NULL_BRUSH); // Transparent brush
+        HGDIOBJ hOldPen = SelectObject(hdc, hPen);
+        HGDIOBJ hOldBrush = SelectObject(hdc, hBrush);
+
+        Ellipse(hdc, static_cast<int>(x + 10.0f - offsetX - 20), static_cast<int>(y + 12.5f - offsetY - 20), static_cast<int>(x + 10.0f - offsetX + 20), static_cast<int>(y + 12.5f - offsetY + 20));
+
+        SelectObject(hdc, hOldPen);
+        SelectObject(hdc, hOldBrush);
+        DeleteObject(hPen);
+    }
 }
 
 void Player::DrawBoundingBox(HDC hdc, float offsetX, float offsetY) const {
@@ -211,57 +309,21 @@ void Player::LevelUp() {
 
 }
 
-void Player::DrawExperienceBar(HDC hdc, RECT clientRect) {
-    // 회색 배경 (전체 너비)
-    RECT backgroundRect;
-    backgroundRect.left = 0;
-    backgroundRect.top = 0;
-    backgroundRect.right = clientRect.right;
-    backgroundRect.bottom = 25;
+bool Player::IsInvincible() const {
+    return currentInvincibilityTime > 0;
+}
 
-    HBRUSH grayBrush = CreateSolidBrush(RGB(128, 128, 128));
-    FillRect(hdc, &backgroundRect, grayBrush);
-    DeleteObject(grayBrush);
+void Player::UpdateInvincibility(float frameTime) {
+    if (currentInvincibilityTime > 0) {
+        currentInvincibilityTime -= frameTime;
+        if (currentInvincibilityTime < 0) currentInvincibilityTime = 0;
+    }
+}
 
-    // 연한 초록색 경험치 바 (현재 경험치에 비례한 너비)
-    float percent = static_cast<float>(experience) / experienceToNextLevel;
-    RECT experienceRect = backgroundRect;
-    experienceRect.right = static_cast<LONG>(percent * clientRect.right);
-
-    HBRUSH greenBrush = CreateSolidBrush(RGB(144, 238, 144));
-    FillRect(hdc, &experienceRect, greenBrush);
-    DeleteObject(greenBrush);
-
-    HFONT hFont25 = CreateFont(
-        -24,                      // Height of the font
-        0,                        // Width of the font
-        0,                        // Escapement angle
-        0,                        // Orientation angle
-        FW_NORMAL,                // Font weight
-        FALSE,                    // Italic attribute
-        FALSE,                    // Underline attribute
-        FALSE,                    // Strikeout attribute
-        ANSI_CHARSET,             // Character set identifier
-        OUT_TT_PRECIS,            // Output precision
-        CLIP_DEFAULT_PRECIS,      // Clipping precision
-        ANTIALIASED_QUALITY,      // Output quality
-        DEFAULT_PITCH | FF_DONTCARE,  // Pitch and family
-        L"ChevyRay - Lantern"     // Font name
-    );
-
-    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont25);
-
-    wchar_t levelText[20];
-    swprintf_s(levelText, L"LEVEL %d", level);
-
-    RECT textRect;
-    textRect.left = 0;
-    textRect.top = 0;
-    textRect.right = clientRect.right;
-    textRect.bottom = 30;
-    DrawText(hdc, levelText, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-
-    // 원래 폰트로 복원하고 새로 생성한 폰트 삭제
-    SelectObject(hdc, hOldFont);
-    DeleteObject(hFont25);
+void Player::TakeDamage(int amount) {
+    if (!IsInvincible()) {
+        health -= amount;
+        if (health < 0) health = 0;
+        currentInvincibilityTime = invincibilityTime;
+    }
 }

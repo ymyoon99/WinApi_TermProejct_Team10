@@ -301,11 +301,11 @@ void Player::AddExperience(int amount) {
 
 void Player::LevelUp() {
     level++;
-    // 경험치 요구량
+    // 경험치 요구량 = *1.5f
     experienceToNextLevel = static_cast<int>(experienceToNextLevel * 1.5f);
     levelUpEffectTime = levelUpEffectDuration;
 
-    // 레벨업 할 시 기능 추가
+    // 레벨업 할 시 기능추가
 
 }
 

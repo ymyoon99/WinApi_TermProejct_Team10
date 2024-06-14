@@ -27,7 +27,8 @@ GameFramework::GameFramework()
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
 
-    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 2.0f, 0.2f); // x, y, speed, animationSpeed
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 2.0f, 0.2f); // 플레이어 생성
+    // xPos, yPos, speed, animationSpeed
     player->SetBounds(mapWidth, mapHeight);
 
     camera = new Camera(800, 600);
@@ -331,7 +332,66 @@ void GameFramework::Update(float frameTime) {
 
     // 총 장전 업데이트
     currentGun->UpdateReload(frameTime);
+
+    // 디버그 키 업데이트
+    HandleDebugKeys();
 }
+
+void GameFramework::HandleDebugKeys() {
+    if (GetAsyncKeyState(VK_F1) & 0x8000) {
+        if (!f1Pressed) {
+            player->maxHealth += 1;
+            player->health += 1;
+            f1Pressed = true;
+        }
+    }
+    else {
+        f1Pressed = false;
+    }
+
+    if (GetAsyncKeyState(VK_F2) & 0x8000) {
+        if (!f2Pressed) {
+            revolver.maxAmmo += 1;
+            headshotGun.maxAmmo += 1;
+            clusterGun.maxAmmo += 1;
+            dualShotgun.maxAmmo += 1;
+            f2Pressed = true;
+        }
+    }
+    else {
+        f2Pressed = false;
+    }
+
+    if (GetAsyncKeyState(VK_F3) & 0x8000) {
+        if (!f3Pressed) {
+            player->speed += 1.0f;
+            f3Pressed = true;
+        }
+    }
+    else {
+        f3Pressed = false;
+    }
+
+    if (GetAsyncKeyState(VK_F4) & 0x8000) {
+        if (!f4Pressed) {
+            // 총 업그레이드
+            if (currentGun == &revolver) {
+                currentGun = &headshotGun;
+            }
+            else if (currentGun == &headshotGun) {
+                currentGun = &clusterGun;
+            }
+            else if (currentGun == &clusterGun) {
+                currentGun = &dualShotgun;
+            }
+            f4Pressed = true;
+        }
+    }
+    else {
+        f4Pressed = false;
+    }
+}
+
 
 void GameFramework::CreateObstacles(int numObstacles) {
     int mapWidth = mapImage.GetWidth();

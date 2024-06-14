@@ -46,7 +46,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
         }
         else
         {
-            frameStartTime = GetTickCount();  // 프레임 시작 시간
+            frameStartTime = GetTickCount64();  // 프레임 시작 시간
 
             // 게임 프레임 업데이트
             frameTime = 1.0f / 60.0f;  // 약 60FPS로 가정
@@ -54,7 +54,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
             InvalidateRect(GetActiveWindow(), NULL, FALSE);
 
             // 프레임이 너무 빨리 그려지는 경우 대기
-            frameEndTime = GetTickCount();
+            frameEndTime = GetTickCount64();
             DWORD frameElapsedTime = frameEndTime - frameStartTime;
             if (frameElapsedTime < GAME_FRAME_RATE)
             {
@@ -148,6 +148,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_KEYDOWN:
+        if (wParam == VK_ESCAPE) {
+            gameframework.TogglePause();
+            break;
+        }
     case WM_KEYUP:
         gameframework.OnKeyBoardProcessing(message, wParam, lParam);
         break;

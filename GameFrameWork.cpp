@@ -19,10 +19,12 @@ GameFramework::GameFramework()
     yogSpawnTimer(0.0f),
     currentGun(&revolver),
     frameTime(0.0f),
-    gameTimeSeconds(0) {
+    gameTimeSeconds(0),
+    isPaused(false) {
     Clear();
 
     mapImage.Load(L"./resources/background/background.png");
+    pauseUIImage.Load(L"./resources/ui/T_PauseMenu.png");
 
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
@@ -89,6 +91,10 @@ GameFramework::~GameFramework() {
         delete enemy;
     }
     enemies.clear();
+}
+
+void GameFramework::TogglePause() {
+    isPaused = !isPaused;
 }
 
 void GameFramework::StartCreateEnemies() {
@@ -200,6 +206,10 @@ void GameFramework::SpawnItem(float x, float y) {
 }
 
 void GameFramework::Update(float frameTime) {
+    if (isPaused) {
+        return; 
+    }
+
     this->frameTime = frameTime;  // 프레임 타임 저장
 
     static float timeAccumulator = 0.0f;
@@ -438,7 +448,7 @@ void GameFramework::DrawGameTime(HDC hdc) {
     }
 
     // 기존 폰트 저장
-    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    HFONT hOldFont = (HFONT)SelectObject(m_hdcBackBuffer, hFont);
 
     RECT rect;
     rect.left = 625;  // 중앙 상단
@@ -452,27 +462,37 @@ void GameFramework::DrawGameTime(HDC hdc) {
     wchar_t gameTimeText[100];
     swprintf_s(gameTimeText, L"%02d:%02d", minutes, seconds);
 
-    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
-    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
-    DrawText(hdc, gameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+    SetBkMode(m_hdcBackBuffer, TRANSPARENT);  // 배경 투명하게 설정
+    SetTextColor(m_hdcBackBuffer, RGB(255, 255, 255));  // 흰색 글씨
+    DrawText(m_hdcBackBuffer, gameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
-    SelectObject(hdc, hOldFont);
+    SelectObject(m_hdcBackBuffer, hOldFont);
 }
 
-//void GameFramework::DrawFrameTime(HDC hdc) {
-//    RECT rect;
-//    rect.left = 350;  // 중앙 상단
-//    rect.top = 40;
-//    rect.right = rect.left + 100;
-//    rect.bottom = rect.top + 20;
-//
-//    wchar_t frameTimeText[100];
-//    swprintf_s(frameTimeText, L"FrameTime: %.2f ms", frameTime * 1000);  // 프레임 타임을 밀리초 단위로 표시
-//
-//    SetBkMode(hdc, TRANSPARENT);  // 배경 투명하게 설정
-//    SetTextColor(hdc, RGB(255, 255, 255));  // 흰색 글씨
-//    DrawText(hdc, frameTimeText, -1, &rect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-//}
+void GameFramework::DrawPauseMenu(HDC hdc) {
+    if (!hFont) {
+        InitializeFont();
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(m_hdcBackBuffer, hFont);
+
+    SetBkMode(m_hdcBackBuffer, TRANSPARENT);
+
+    RECT resumeRect = { 300, 200, 500, 250 };
+    RECT mainMenuRect = { 300, 260, 500, 310 };
+    RECT quitRect = { 300, 320, 500, 370 };
+
+    SetTextColor(m_hdcBackBuffer, selectedMenuIndex == 0 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+    DrawText(m_hdcBackBuffer, L"Resume", -1, &resumeRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SetTextColor(m_hdcBackBuffer, selectedMenuIndex == 1 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+    DrawText(m_hdcBackBuffer, L"Main Menu", -1, &mainMenuRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SetTextColor(m_hdcBackBuffer, selectedMenuIndex == 2 ? RGB(255, 255, 0) : RGB(255, 255, 255));
+    DrawText(m_hdcBackBuffer, L"Quit", -1, &quitRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(m_hdcBackBuffer, hOldFont);
+}
 
 void GameFramework::Draw(HDC hdc) {
     if (!m_hdcBackBuffer) {
@@ -520,6 +540,19 @@ void GameFramework::Draw(HDC hdc) {
     int clickWidth = clickImage.GetWidth();
     int clickHeight = clickImage.GetHeight();
 
+    DrawBulletUI(m_hdcBackBuffer);
+    DrawReloadingUI(m_hdcBackBuffer);
+    DrawGameTime(m_hdcBackBuffer);
+
+    if (isPaused) { // 정지화면 UI
+        int panelWidth = pauseUIImage.GetWidth();
+        int panelHeight = pauseUIImage.GetHeight();
+        int x = (clientRect.right - panelWidth) / 2;
+        int y = (clientRect.bottom - panelHeight) / 2;
+        pauseUIImage.Draw(m_hdcBackBuffer, x, y);
+        DrawPauseMenu(m_hdcBackBuffer);
+    }
+
     if (showClickImage) {
         clickImage.Draw(m_hdcBackBuffer, cursorPos.x - clickWidth / 2, cursorPos.y - clickHeight / 2);
     }
@@ -527,73 +560,114 @@ void GameFramework::Draw(HDC hdc) {
         cursorImage.Draw(m_hdcBackBuffer, cursorPos.x - cursorWidth / 2, cursorPos.y - cursorHeight / 2);
     }
 
-    DrawBulletUI(m_hdcBackBuffer);
-    DrawReloadingUI(m_hdcBackBuffer);
-    //DrawFrameTime(m_hdcBackBuffer);
-    DrawGameTime(m_hdcBackBuffer);
-
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
 }
 
-void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
-    switch (iMessage) {
-    case WM_KEYDOWN:
-        if (wParam == 'Q') {
-            SendMessage(m_hWnd, WM_DESTROY, 0, 0);
-            return;
-        }
-        switch (wParam) {
-        case 'A':
-        case 'a':
-            player->moveLeft = true;
-            break;
-        case 'D':
-        case 'd':
-            player->moveRight = true;
-            break;
-        case 'W':
-        case 'w':
-            player->moveUp = true;
-            break;
-        case 'S':
-        case 's':
-            player->moveDown = true;
-            break;
-        case '1':
-            currentGun = &revolver;
-            break;
-        case '2':
-            currentGun = &headshotGun;
-            break;
-        case '3':
-            currentGun = &clusterGun;
-            break;
-        case '4':
-            currentGun = &dualShotgun;
-            break;
-        }
+void GameFramework::OnMenuSelect() {
+    switch (selectedMenuIndex) {
+    case 0:
+        TogglePause();
         break;
+    case 1:
+        // Main menu로 돌아가는 로직 추가
+        break;
+    case 2:
+        PostMessage(m_hWnd, WM_CLOSE, 0, 0);
+        break;
+    }
+}
 
-    case WM_KEYUP:
-        switch (wParam) {
-        case 'A':
-        case 'a':
-            player->moveLeft = false;
+// 키 다운 이벤트 처리
+void GameFramework::OnKeyDown(WPARAM wParam) {
+    switch (wParam) {
+    case VK_UP:
+        selectedMenuIndex = (selectedMenuIndex - 1 + 3) % 3; // 메뉴 항목 수에 따라 변경
+        break;
+    case VK_DOWN:
+        selectedMenuIndex = (selectedMenuIndex + 1) % 3;
+        break;
+    case VK_RETURN:
+        OnMenuSelect();
+        break;
+    }
+}
+
+// 키 업 이벤트 처리 (필요시 구현)
+void GameFramework::OnKeyUp(WPARAM wParam) {
+    // 필요한 경우 키 업 이벤트 처리
+}
+
+void GameFramework::OnKeyBoardProcessing(UINT iMessage, WPARAM wParam, LPARAM lParam) {
+    if (isPaused) {
+        switch (iMessage) {
+        case WM_KEYDOWN:
+            OnKeyDown(wParam);
             break;
-        case 'D':
-        case 'd':
-            player->moveRight = false;
-            break;
-        case 'W':
-        case 'w':
-            player->moveUp = false;
-            break;
-        case 'S':
-        case 's':
-            player->moveDown = false;
+        case WM_KEYUP:
+            OnKeyUp(wParam);
             break;
         }
-        break;
+    }
+    else {
+        switch (iMessage) {
+        case WM_KEYDOWN:
+            if (wParam == 'Q') {
+                SendMessage(m_hWnd, WM_DESTROY, 0, 0);
+                return;
+            }
+            switch (wParam) {
+            case 'A':
+            case 'a':
+                player->moveLeft = true;
+                break;
+            case 'D':
+            case 'd':
+                player->moveRight = true;
+                break;
+            case 'W':
+            case 'w':
+                player->moveUp = true;
+                break;
+            case 'S':
+            case 's':
+                player->moveDown = true;
+                break;
+            case '1':
+                currentGun = &revolver;
+                break;
+            case '2':
+                currentGun = &headshotGun;
+                break;
+            case '3':
+                currentGun = &clusterGun;
+                break;
+            case '4':
+                currentGun = &dualShotgun;
+                break;
+            }
+            break;
+
+        case WM_KEYUP:
+            switch (wParam) {
+            case 'A':
+            case 'a':
+                player->moveLeft = false;
+                break;
+            case 'D':
+            case 'd':
+                player->moveRight = false;
+                break;
+            case 'W':
+            case 'w':
+                player->moveUp = false;
+                break;
+            case 'S':
+            case 's':
+                player->moveDown = false;
+                break;
+            }
+            break;
+        }
     }
 }
 
@@ -612,13 +686,20 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         }
         break;
     }
-    case WM_LBUTTONDOWN:
+    case WM_LBUTTONDOWN: {
         showClickImage = true;
         clickImageTimer = 0.2f;
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
-        FireBullet(player->GetX(), player->GetY(), cursorPos.x + camera->GetOffsetX(), cursorPos.y + camera->GetOffsetY());
+
+        if (isPaused) {
+            return;
+        }
+        else {
+            FireBullet(player->GetX(), player->GetY(), cursorPos.x + camera->GetOffsetX(), cursorPos.y + camera->GetOffsetY());
+        }
         break;
+    }
     }
 }
 

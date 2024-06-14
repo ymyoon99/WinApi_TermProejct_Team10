@@ -27,6 +27,7 @@ void Enemy::LoadImages() {
 
 
 void Enemy::Update(float frameTime, float playerX, float playerY, const std::vector<Obstacle*>& obstacles) {
+
     if (isDying) {
         UpdateDeathEffect(frameTime);
         return;

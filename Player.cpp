@@ -23,6 +23,7 @@ Player::~Player() {
 }
 
 void Player::Update(float frameTime, const std::vector<Obstacle*>& obstacles) {
+
     frameTimeAccumulator += frameTime;
     levelUpEffectTime -= frameTime;
     UpdateInvincibility(frameTime);

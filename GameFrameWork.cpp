@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "GameFramework.h"
+#include <random>
 
 extern GameFramework gameframework;
 extern HFONT hFont;
@@ -20,7 +21,8 @@ GameFramework::GameFramework()
     currentGun(&revolver),
     frameTime(0.0f),
     gameTimeSeconds(0),
-    isPaused(false) {
+    isPaused(false),
+    isShowingUpgradePanel(false) {
     Clear();
 
     mapImage.Load(L"./resources/background/background.png");
@@ -29,8 +31,8 @@ GameFramework::GameFramework()
     int mapWidth = mapImage.GetWidth();
     int mapHeight = mapImage.GetHeight();
 
-    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 2.0f, 0.2f); // 플레이어 생성
-    // xPos, yPos, speed, animationSpeed
+    player = new Player(mapWidth / 2.0f, mapHeight / 2.0f, 2.0f, 0.2f, this); // gameFramework 포인터 전달
+    // xPos, yPos, speed, animationSpeed, gameframeworkPtr
     player->SetBounds(mapWidth, mapHeight);
 
     camera = new Camera(800, 600);
@@ -95,6 +97,43 @@ GameFramework::~GameFramework() {
 
 void GameFramework::TogglePause() {
     isPaused = !isPaused;
+}
+
+void GameFramework::LevelUpUpgrade() {
+    ShowUpgradePanel();
+}
+
+void GameFramework::ShowUpgradePanel() {
+    // 이미지를 한번만 로드하도록
+    if (!isUpgradePanelLoaded) {
+        selectedPanelImage.Load(L"./resources/ui/T_SelectedPanel.png");
+        unselectedPanelImage.Load(L"./resources/ui/T_UnSelectedPanel.png");
+        isUpgradePanelLoaded = true;
+    }
+
+    isShowingUpgradePanel = true;
+
+    // 랜덤으로 업그레이드 항목 선택
+    std::vector<UpgradeOptions> allUpgrades = { MaxHp, MaxAmmo, AddSpeed, UpgradeGun };
+    std::random_shuffle(allUpgrades.begin(), allUpgrades.end());
+    upgradeOptions[0] = allUpgrades[0];
+    upgradeOptions[1] = allUpgrades[1];
+
+    selectedUpgradePanel = 0; // Start with the left panel selected
+}
+
+std::wstring GameFramework::GetUpgradeOptionText(UpgradeOptions option) {
+    switch (option) {
+    case MaxHp: return L"MaxHp +1";
+    case MaxAmmo: return L"Max Ammo +1";
+    case AddSpeed: return L"Add Speed";
+    case UpgradeGun: return L"Upgrade Gun";
+    default: return L"Unknown";
+    }
+}
+
+void GameFramework::HideUpgradePanel() {
+    isShowingUpgradePanel = false;
 }
 
 void GameFramework::StartCreateEnemies() {
@@ -182,7 +221,7 @@ void GameFramework::DrawBulletUI(HDC hdc) {
 
 void GameFramework::DrawReloadingUI(HDC hdc) {
     if (currentGun->IsReloading()) {
-        RECT rect;
+        RECT rect; 
         rect.left = static_cast<LONG>(player->GetX() - camera->GetOffsetX() - 15);
         rect.top = static_cast<LONG>(player->GetY() - camera->GetOffsetY() - 20);
         rect.right = rect.left + 50;
@@ -206,8 +245,12 @@ void GameFramework::SpawnItem(float x, float y) {
 }
 
 void GameFramework::Update(float frameTime) {
-    if (isPaused) {
-        return; 
+   
+    if (isPaused) return;
+
+    if (isShowingUpgradePanel) {
+        HandleUpgradeInput();
+        return;
     }
 
     this->frameTime = frameTime;  // 프레임 타임 저장
@@ -494,6 +537,54 @@ void GameFramework::DrawPauseMenu(HDC hdc) {
     SelectObject(m_hdcBackBuffer, hOldFont);
 }
 
+void GameFramework::DrawUpgradePanel(HDC hdc) {
+    if (!isShowingUpgradePanel) return;
+
+    int screenWidth = 800;
+    int screenHeight = 600;
+    int panelWidth = 300;
+    int panelHeight = 300;
+    int panelSpacing = 100;
+
+    int leftPanelX = (screenWidth / 2) - panelWidth - (panelSpacing / 2);
+    int rightPanelX = (screenWidth / 2) + (panelSpacing / 2);
+    int panelY = (screenHeight / 2) - (panelHeight / 2);
+
+    // Draw the left panel
+    if (selectedUpgradePanel == 0) {
+        selectedPanelImage.Draw(hdc, leftPanelX, panelY, panelWidth, panelHeight);
+    }
+    else {
+        unselectedPanelImage.Draw(hdc, leftPanelX, panelY, panelWidth, panelHeight);
+    }
+
+    // Draw the right panel
+    if (selectedUpgradePanel == 1) {
+        selectedPanelImage.Draw(hdc, rightPanelX, panelY, panelWidth, panelHeight);
+    }
+    else {
+        unselectedPanelImage.Draw(hdc, rightPanelX, panelY, panelWidth, panelHeight);
+    }
+
+    // Draw the upgrade options text
+    if (!hFont) {
+        InitializeFont();
+    }
+
+    HFONT hOldFont = (HFONT)SelectObject(m_hdcBackBuffer, hFont);
+
+    SetTextColor(hdc, RGB(255, 255, 255));
+    SetBkMode(hdc, TRANSPARENT);
+
+    RECT leftTextRect = { leftPanelX, panelY, leftPanelX + panelWidth, panelY + panelHeight };
+    DrawText(hdc, GetUpgradeOptionText(upgradeOptions[0]).c_str(), -1, &leftTextRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    RECT rightTextRect = { rightPanelX, panelY, rightPanelX + panelWidth, panelY + panelHeight };
+    DrawText(hdc, GetUpgradeOptionText(upgradeOptions[1]).c_str(), -1, &rightTextRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+
+    SelectObject(m_hdcBackBuffer, hOldFont);
+}
+
 void GameFramework::Draw(HDC hdc) {
     if (!m_hdcBackBuffer) {
         InitializeDoubleBuffering(hdc);
@@ -544,6 +635,10 @@ void GameFramework::Draw(HDC hdc) {
     DrawReloadingUI(m_hdcBackBuffer);
     DrawGameTime(m_hdcBackBuffer);
 
+    if (isShowingUpgradePanel) { // 업그레이드 UI
+        DrawUpgradePanel(m_hdcBackBuffer);
+    }
+
     if (isPaused) { // 정지화면 UI
         int panelWidth = pauseUIImage.GetWidth();
         int panelHeight = pauseUIImage.GetHeight();
@@ -553,6 +648,7 @@ void GameFramework::Draw(HDC hdc) {
         DrawPauseMenu(m_hdcBackBuffer);
     }
 
+    // 커서 이미지 Draw
     if (showClickImage) {
         clickImage.Draw(m_hdcBackBuffer, cursorPos.x - clickWidth / 2, cursorPos.y - clickHeight / 2);
     }
@@ -561,6 +657,47 @@ void GameFramework::Draw(HDC hdc) {
     }
 
     BitBlt(hdc, 0, 0, clientRect.right, clientRect.bottom, m_hdcBackBuffer, 0, 0, SRCCOPY);
+}
+
+void GameFramework::HandleUpgradeInput() {
+    if (!isShowingUpgradePanel) return;
+
+    if (GetAsyncKeyState(VK_LEFT) & 0x8000) {
+        selectedUpgradePanel = 0;
+    }
+    if (GetAsyncKeyState(VK_RIGHT) & 0x8000) {
+        selectedUpgradePanel = 1;
+    }
+    if (GetAsyncKeyState(VK_RETURN) & 0x8000) {
+        // 업그레이드 항목 적용
+        switch (upgradeOptions[selectedUpgradePanel]) {
+        case MaxHp:
+            player->maxHealth += 1;
+            player->health += 1;
+            break;
+        case MaxAmmo:
+            currentGun->maxAmmo += 1;
+            break;
+        case AddSpeed:
+            player->speed += 0.3f;
+            break;
+        case UpgradeGun:
+            if (currentGun == &revolver) {
+                currentGun = &headshotGun;
+            }
+            else if (currentGun == &headshotGun) {
+                currentGun = &clusterGun;
+            }
+            else if (currentGun == &clusterGun) {
+                currentGun = &dualShotgun;
+            }
+            else {
+                currentGun = &dualShotgun;
+            }
+            break;
+        }
+        HideUpgradePanel();
+    }
 }
 
 void GameFramework::OnMenuSelect() {
@@ -692,7 +829,7 @@ void GameFramework::OnMouseProcessing(UINT iMessage, WPARAM wParam, LPARAM lPara
         cursorPos.x = LOWORD(lParam);
         cursorPos.y = HIWORD(lParam);
 
-        if (isPaused) {
+        if (isPaused || isShowingUpgradePanel) {
             return;
         }
         else {

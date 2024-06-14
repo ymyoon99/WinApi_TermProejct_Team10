@@ -5,11 +5,13 @@
 #include "Obstacle.h"
 #include "Enemy.h"      
 #include "Camera.h"
+#include <string>
 
+class GameFramework;
 
 class Player {
 public:
-    Player(float x, float y, float speed, float animationSpeed);
+    Player(float x, float y, float speed, float animationSpeed, GameFramework* gameFramework);
     ~Player();
 
     void Update(float frameTime, const std::vector<Obstacle*>& obstacles);
@@ -32,6 +34,8 @@ public:
 
     void LevelUp();
     bool CheckCollision(float newX, float newY, const std::vector<Obstacle*>& obstacles) const;
+
+    void ApplyUpgrade(const std::wstring& upgrade);
 
     float x, y;
     float speed;
@@ -75,4 +79,6 @@ public:
     void DrawInvincibilityIndicator(HDC hdc, float offsetX, float offsetY);
     bool IsInvincible() const;
     void UpdateInvincibility(float frameTime);
+
+    GameFramework* gameFramework;
 };

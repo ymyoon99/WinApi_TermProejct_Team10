@@ -9,13 +9,14 @@
 
 extern HFONT hFont;
 
-Player::Player(float x, float y, float speed, float animationSpeed)
+Player::Player(float x, float y, float speed, float animationSpeed, GameFramework* gameFramework)
     : x(x), y(y), speed(speed), animationSpeed(animationSpeed), currentFrame(0), frameTimeAccumulator(0.0f),
     moveLeft(false), moveRight(false), moveUp(false), moveDown(false), isMoving(false),
     boundWidth(0), boundHeight(0), directionLeft(false),
     level(1), experience(0), experienceToNextLevel(100), levelUpEffectTime(0.0f),
     health(4), maxHealth(4), invincibilityTime(2.0f), currentInvincibilityTime(0.0f),
-    heartAnimationFrame(0), heartAnimationSpeed(0.2f), heartAnimationAccumulator(0.0f) {
+    heartAnimationFrame(0), heartAnimationSpeed(0.2f), heartAnimationAccumulator(0.0f),
+    gameFramework(gameFramework) {
     LoadImages();
 }
 
@@ -307,7 +308,9 @@ void Player::LevelUp() {
     levelUpEffectTime = levelUpEffectDuration;
 
     // 레벨업 할 시 기능추가
-
+    if (gameFramework) {
+        gameFramework->LevelUpUpgrade();
+    }
 }
 
 bool Player::IsInvincible() const {
@@ -327,4 +330,15 @@ void Player::TakeDamage(int amount) {
         if (health < 0) health = 0;
         currentInvincibilityTime = invincibilityTime;
     }
+}
+
+void Player::ApplyUpgrade(const std::wstring& upgrade) {
+    if (upgrade == L"MaxHp +1") {
+        maxHealth += 1;
+        health += 1;
+    }
+    else if (upgrade == L"Add Speed") {
+        speed += 0.5f;
+    }
+    // Other upgrade cases...
 }
